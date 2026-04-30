@@ -27,12 +27,32 @@
     </div>
     
     <script>
-        const API_BASE = '/chat/api';
+        const API_BASE = '/chat/api/index.php';
         
         const FriendDetail = {
             friendId: null,
             friend: null,
             currentUser: null,
+            
+            // 解析endpoint为查询参数
+            parseEndpoint(endpoint) {
+                let path = endpoint.split('?')[0];
+                path = path.replace(/^\//, '');
+                const parts = path.split('/');
+                return {
+                    module: parts[0] || '',
+                    action: parts[1] || ''
+                };
+            },
+            
+            // 从endpoint中提取查询字符串
+            getQueryString(endpoint) {
+                const qIndex = endpoint.indexOf('?');
+                if (qIndex !== -1) {
+                    return '&' + endpoint.substring(qIndex + 1);
+                }
+                return '';
+            },
             
             async init() {
                 // 检查登录状态
@@ -67,7 +87,9 @@
             },
             
             async api(endpoint, method = 'GET', data = null) {
-                const url = API_BASE + endpoint;
+                const { module, action } = this.parseEndpoint(endpoint);
+                const queryString = this.getQueryString(endpoint);
+                const url = API_BASE + '?module=' + module + '&action=' + action + queryString;
                 const options = {
                     method,
                     headers: {

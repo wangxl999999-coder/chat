@@ -1,4 +1,4 @@
-const API_BASE = '/chat/api';
+const API_BASE = '/chat/api/index.php';
 
 // 工具函数
 const App = {
@@ -6,6 +6,28 @@ const App = {
     currentPage: 'conversation',
     pollTimer: null,
     stickerPanelVisible: false,
+    
+    // 解析endpoint为查询参数 (支持 '/auth/login' 和 'auth/login' 两种格式)
+    parseEndpoint(endpoint) {
+        // 移除可能的查询字符串
+        let path = endpoint.split('?')[0];
+        // 移除开头的斜杠
+        path = path.replace(/^\//, '');
+        const parts = path.split('/');
+        return {
+            module: parts[0] || '',
+            action: parts[1] || ''
+        };
+    },
+    
+    // 从endpoint中提取查询字符串
+    getQueryString(endpoint) {
+        const qIndex = endpoint.indexOf('?');
+        if (qIndex !== -1) {
+            return '&' + endpoint.substring(qIndex + 1);
+        }
+        return '';
+    },
     
     init() {
         this.checkLogin().then(loggedIn => {
@@ -20,7 +42,7 @@ const App = {
     // 检查登录状态
     async checkLogin() {
         try {
-            const res = await this.api('auth/check_login');
+            const res = await this.api('/auth/check_login');
             if (res.success) {
                 this.currentUser = res.data;
                 return true;
@@ -174,7 +196,9 @@ const App = {
     
     // API请求
     async api(endpoint, method = 'GET', data = null) {
-        const url = API_BASE + endpoint;
+        const { module, action } = this.parseEndpoint(endpoint);
+        const queryString = this.getQueryString(endpoint);
+        const url = API_BASE + '?module=' + module + '&action=' + action + queryString;
         const options = {
             method,
             headers: {

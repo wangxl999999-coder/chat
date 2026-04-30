@@ -702,7 +702,7 @@
     </div>
     
     <script>
-        const API_BASE = '/api';
+        const API_BASE = '/chat/api/index.php';
         
         const Admin = {
             currentAdmin: null,
@@ -713,6 +713,15 @@
             usersStatus: -1,
             selectedUserId: null,
             selectedUser: null,
+            
+            // 解析endpoint为查询参数
+            parseEndpoint(endpoint) {
+                const parts = endpoint.replace(/^\//, '').split('/');
+                return {
+                    module: parts[0] || '',
+                    action: parts[1] || ''
+                };
+            },
             
             async init() {
                 // 检查登录状态
@@ -740,7 +749,8 @@
             },
             
             async api(endpoint, method = 'GET', data = null) {
-                const url = API_BASE + endpoint;
+                const { module, action } = this.parseEndpoint(endpoint);
+                const url = API_BASE + '?module=' + module + '&action=' + action;
                 const options = {
                     method,
                     headers: {

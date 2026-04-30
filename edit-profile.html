@@ -106,11 +106,31 @@
     </div>
     
     <script>
-        const API_BASE = '/chat/api';
+        const API_BASE = '/chat/api/index.php';
         
         const EditProfile = {
             currentUser: null,
             selectedGender: 0,
+            
+            // 解析endpoint为查询参数
+            parseEndpoint(endpoint) {
+                let path = endpoint.split('?')[0];
+                path = path.replace(/^\//, '');
+                const parts = path.split('/');
+                return {
+                    module: parts[0] || '',
+                    action: parts[1] || ''
+                };
+            },
+            
+            // 从endpoint中提取查询字符串
+            getQueryString(endpoint) {
+                const qIndex = endpoint.indexOf('?');
+                if (qIndex !== -1) {
+                    return '&' + endpoint.substring(qIndex + 1);
+                }
+                return '';
+            },
             
             async init() {
                 // 检查登录状态
@@ -138,7 +158,9 @@
             },
             
             async api(endpoint, method = 'GET', data = null) {
-                const url = API_BASE + endpoint;
+                const { module, action } = this.parseEndpoint(endpoint);
+                const queryString = this.getQueryString(endpoint);
+                const url = API_BASE + '?module=' + module + '&action=' + action + queryString;
                 const options = {
                     method,
                     headers: {
@@ -224,7 +246,8 @@
                     const formData = new FormData();
                     formData.append('avatar', file);
                     
-                    const response = await fetch(API_BASE + '/user/upload_avatar', {
+                    const uploadUrl = API_BASE + '?module=user&action=upload_avatar';
+                    const response = await fetch(uploadUrl, {
                         method: 'POST',
                         credentials: 'include',
                         body: formData

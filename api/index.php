@@ -12,17 +12,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// 获取请求的接口
-$request_uri = $_SERVER['REQUEST_URI'];
-$script_name = dirname($_SERVER['SCRIPT_NAME']);
-$path = str_replace($script_name, '', $request_uri);
-$path = parse_url($path, PHP_URL_PATH);
-$path = trim($path, '/');
+// 获取请求的接口（支持URL重写和查询参数两种方式）
+$module = isset($_GET['module']) ? $_GET['module'] : '';
+$action = isset($_GET['action']) ? $_GET['action'] : '';
 
-// 解析路径
-$parts = explode('/', $path);
-$module = $parts[0] ?? '';
-$action = $parts[1] ?? '';
+// 如果没有查询参数，尝试从URL路径解析（URL重写方式）
+if (empty($module)) {
+    $request_uri = $_SERVER['REQUEST_URI'];
+    $script_name = dirname($_SERVER['SCRIPT_NAME']);
+    
+    // 移除查询字符串
+    if (($pos = strpos($request_uri, '?')) !== false) {
+        $request_uri = substr($request_uri, 0, $pos);
+    }
+    
+    // 移除基础路径
+    $path = str_replace($script_name, '', $request_uri);
+    $path = trim($path, '/');
+    
+    // 解析路径
+    if (!empty($path)) {
+        $parts = explode('/', $path);
+        $module = $parts[0] ?? '';
+        $action = $parts[1] ?? '';
+    }
+}
 
 // 检查是否需要登录
 $protectedModules = ['user', 'friend', 'message', 'conversation'];
