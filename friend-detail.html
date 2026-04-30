@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>好友详情</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <button class="chat-back-btn" onclick="FriendDetail.back()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <h1>好友详情</h1>
+            <div style="width: 40px;"></div>
+        </header>
+        
+        <div id="friend-detail-content">
+            <div class="empty-state">
+                <div class="loading"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/chat/api';
+        
+        const FriendDetail = {
+            friendId: null,
+            friend: null,
+            currentUser: null,
+            
+            async init() {
+                // 检查登录状态
+                const loggedIn = await this.checkLogin();
+                if (!loggedIn) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+                
+                // 获取好友ID
+                this.friendId = parseInt(sessionStorage.getItem('friend_detail_id'));
+                if (!this.friendId || isNaN(this.friendId)) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // 加载好友详情
+                await this.loadFriendDetail();
+            },
+            
+            async checkLogin() {
+                try {
+                    const res = await this.api('/auth/check_login');
+                    if (res.success) {
+                        this.currentUser = res.data;
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('检查登录失败:', e);
+                }
+                return false;
+            },
+            
+            async api(endpoint, method = 'GET', data = null) {
+                const url = API_BASE + endpoint;
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                };
+                
+                if (data && method !== 'GET') {
+                    options.body = JSON.stringify(data);
+                }
+                
+                try {
+                    const response = await fetch(url, options);
+                    const result = await response.json();
+                    return result;
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            toast(message, duration = 2000) {
+                const existingToast = document.querySelector('.toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, duration);
+            },
+            
+            async loadFriendDetail() {
+                try {
+                    const res = await this.api(`/user/info?user_id=${this.friendId}`);
+                    if (res.success) {
+                        this.friend = res.data;
+                        this.render();
+                    } else {
+                        this.showError(res.message);
+                    }
+                } catch (e) {
+                    this.showError('加载失败');
+                }
+            },
+            
+            showError(message) {
+                const container = document.getElementById('friend-detail-content');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>${message}</p>
+                        <button class="btn btn-sm" onclick="window.location.href='index.html'" style="margin-top: 16px;">返回</button>
+                    </div>
+                `;
+            },
+            
+            render() {
+                const friend = this.friend;
+                const container = document.getElementById('friend-detail-content');
+                
+                const avatar = friend.avatar ? 
+                    `<img src="${friend.avatar}" class="avatar large" alt="${friend.nickname}">` :
+                    `<div class="avatar large"><div class="avatar-placeholder">${(friend.nickname || '用')[0].toUpperCase()}</div></div>`;
+                
+                const genderText = friend.gender === 1 ? '男' : (friend.gender === 2 ? '女' : '未知');
+                const genderIcon = friend.gender === 1 ? '♂' : (friend.gender === 2 ? '♀' : '');
+                
+                // 操作按钮
+                let actionButtons = '';
+                if (friend.friend_status === 1) {
+                    // 已是好友
+                    actionButtons = `
+                        <button class="btn btn-block" onclick="FriendDetail.startChat()">发消息</button>
+                        <div class="profile-section" style="margin-top: 20px;">
+                            <div class="profile-item" onclick="FriendDetail.deleteFriend()">
+                                <div class="profile-item-label" style="color: var(--danger-color);">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                    <span class="profile-item-text">删除好友</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (friend.friend_status === 0) {
+                    // 待确认
+                    actionButtons = `
+                        <div class="profile-section">
+                            <div class="profile-item">
+                                <div class="profile-item-label">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    <span class="profile-item-text">待对方确认</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 不是好友
+                    actionButtons = `
+                        <button class="btn btn-block" onclick="FriendDetail.addFriend()">添加好友</button>
+                    `;
+                }
+                
+                container.innerHTML = `
+                    <div class="profile-header" style="text-align: center; padding: 30px 20px;">
+                        ${avatar}
+                        <div class="profile-name" style="margin-top: 16px; margin-bottom: 8px;">
+                            ${friend.nickname || '用户'}
+                            <span style="font-size: 16px; color: ${friend.gender === 1 ? '#3b82f6' : (friend.gender === 2 ? '#ec4899' : '#9ca3af')};">${genderIcon}</span>
+                        </div>
+                        <div class="profile-number" style="margin-bottom: 12px;">
+                            号码: <span>${friend.user_number}</span>
+                        </div>
+                        <div class="profile-bio">
+                            ${friend.bio || '这个人很懒，什么都没写'}
+                        </div>
+                    </div>
+                    
+                    <div class="profile-section">
+                        <div class="profile-item">
+                            <div class="profile-item-label">
+                                <span class="profile-item-text">性别</span>
+                            </div>
+                            <div class="profile-item-value">${genderText}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 0 16px; margin-top: 30px;">
+                        ${actionButtons}
+                    </div>
+                `;
+            },
+            
+            // 发起聊天
+            startChat() {
+                sessionStorage.setItem('chat_target', JSON.stringify({
+                    id: this.friendId,
+                    nickname: this.friend.nickname,
+                    avatar: this.friend.avatar
+                }));
+                window.location.href = 'chat.html';
+            },
+            
+            // 添加好友
+            async addFriend() {
+                try {
+                    const res = await this.api('/friend/add', 'POST', { friend_id: this.friendId });
+                    if (res.success) {
+                        this.toast('好友申请已发送');
+                        // 刷新
+                        this.loadFriendDetail();
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('操作失败');
+                }
+            },
+            
+            // 删除好友
+            async deleteFriend() {
+                if (!confirm('确定要删除该好友吗？')) {
+                    return;
+                }
+                
+                try {
+                    const res = await this.api('/friend/delete', 'POST', { friend_id: this.friendId });
+                    if (res.success) {
+                        this.toast('已删除好友');
+                        this.back();
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('操作失败');
+                }
+            },
+            
+            back() {
+                window.location.href = 'index.html';
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            FriendDetail.init();
+        });
+    </script>
+</body>
+</html>
