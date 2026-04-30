@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>聊天 - 阅后即焚</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 聊天头部 -->
+        <header class="chat-header">
+            <button class="chat-back-btn" onclick="Chat.back()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <div class="chat-title" id="chat-title">聊天</div>
+            <div class="chat-actions">
+                <button class="chat-back-btn" onclick="Chat.showMenu()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="19" cy="12" r="1"></circle>
+                        <circle cx="5" cy="12" r="1"></circle>
+                    </svg>
+                </button>
+            </div>
+        </header>
+        
+        <!-- 消息列表 -->
+        <div class="chat-messages" id="chat-messages">
+            <!-- 消息将通过JS动态添加 -->
+        </div>
+        
+        <!-- 输入框 -->
+        <div class="chat-input-bar">
+            <div class="chat-input-actions">
+                <button class="chat-input-btn" onclick="Chat.toggleStickerPanel()" title="表情">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="8" cy="14" r="1.5"></circle>
+                        <circle cx="16" cy="14" r="1.5"></circle>
+                        <path d="M8 8s1.5-2 4-2 4 2 4 2"></path>
+                    </svg>
+                </button>
+                <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="Chat.uploadImage(this)">
+                <button class="chat-input-btn" onclick="document.getElementById('image-upload').click()" title="图片">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </button>
+            </div>
+            <div class="chat-input-wrapper">
+                <textarea id="message-input" placeholder="输入消息..." rows="1"></textarea>
+            </div>
+            <button class="chat-send-btn" id="send-btn" onclick="Chat.sendMessage()">发送</button>
+        </div>
+        
+        <!-- 表情面板 -->
+        <div id="sticker-panel" class="sticker-panel" style="display: none;">
+            <div class="sticker-grid" id="sticker-grid">
+                <!-- 表情将动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 图片预览 -->
+    <div id="image-preview" class="image-preview" style="display: none;" onclick="this.style.display='none'">
+        <button class="image-preview-close" onclick="document.getElementById('image-preview').style.display='none'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <img id="preview-image" src="" alt="图片预览">
+    </div>
+    
+    <script>
+        const API_BASE = '/chat/api';
+        
+        // 常用表情
+        const STICKERS = [
+            '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊',
+            '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘',
+            '😗', '😙', '😚', '😛', '😜', '🤪', '😝', '🤑',
+            '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑',
+            '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔',
+            '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮',
+            '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳',
+            '😎', '🤓', '🧐', '😕', '😟', '🙁', '😮', '😯',
+            '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥',
+            '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩',
+            '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿',
+            '💀', '☠️', '💩', '👻', '👽', '🤖', '🎃', '😺',
+            '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾',
+            '👋', '🤚', '🖐', '🖖', '👌', '🤌', '🤏', '✌️',
+            '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕',
+            '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜',
+            '👏', '🙌', '👐', '🤲', '🙏', '💅', '🤝', '💪',
+            '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍'
+        ];
+        
+        const Chat = {
+            targetId: null,
+            targetNickname: '',
+            targetAvatar: '',
+            conversationId: null,
+            currentUser: null,
+            lastMsgId: 0,
+            pollTimer: null,
+            stickersInitialized: false,
+            
+            async init() {
+                // 检查登录状态
+                const loggedIn = await this.checkLogin();
+                if (!loggedIn) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+                
+                // 获取聊天目标信息
+                const targetData = sessionStorage.getItem('chat_target');
+                if (!targetData) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                const target = JSON.parse(targetData);
+                this.targetId = target.id;
+                this.targetNickname = target.nickname;
+                this.targetAvatar = target.avatar;
+                
+                // 设置标题
+                document.getElementById('chat-title').textContent = this.targetNickname;
+                
+                // 初始化表情面板
+                this.initStickers();
+                
+                // 绑定事件
+                this.bindEvents();
+                
+                // 加载消息
+                await this.loadMessages();
+                
+                // 开始轮询
+                this.startPolling();
+            },
+            
+            // 检查登录状态
+            async checkLogin() {
+                try {
+                    const res = await this.api('/auth/check_login');
+                    if (res.success) {
+                        this.currentUser = res.data;
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('检查登录失败:', e);
+                }
+                return false;
+            },
+            
+            // API请求
+            async api(endpoint, method = 'GET', data = null) {
+                const url = API_BASE + endpoint;
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                };
+                
+                if (data && method !== 'GET') {
+                    options.body = JSON.stringify(data);
+                }
+                
+                try {
+                    const response = await fetch(url, options);
+                    const result = await response.json();
+                    return result;
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            // 显示Toast
+            toast(message, duration = 2000) {
+                const existingToast = document.querySelector('.toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, duration);
+            },
+            
+            // 初始化表情
+            initStickers() {
+                if (this.stickersInitialized) return;
+                
+                const grid = document.getElementById('sticker-grid');
+                grid.innerHTML = STICKERS.map(sticker => 
+                    `<div class="sticker-item" onclick="Chat.sendSticker('${sticker}')">${sticker}</div>`
+                ).join('');
+                
+                this.stickersInitialized = true;
+            },
+            
+            // 绑定事件
+            bindEvents() {
+                const input = document.getElementById('message-input');
+                const sendBtn = document.getElementById('send-btn');
+                
+                // 输入框自动高度
+                input.addEventListener('input', () => {
+                    input.style.height = 'auto';
+                    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+                    
+                    // 检查是否有内容
+                    sendBtn.style.opacity = input.value.trim() ? '1' : '0.5';
+                });
+                
+                // Enter发送
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                // 点击空白处隐藏表情面板
+                document.addEventListener('click', (e) => {
+                    const panel = document.getElementById('sticker-panel');
+                    const emojiBtn = e.target.closest('[onclick*="toggleStickerPanel"]');
+                    const stickerItem = e.target.closest('.sticker-item');
+                    
+                    if (!panel.contains(e.target) && !emojiBtn && !stickerItem) {
+                        panel.style.display = 'none';
+                        this.stickerPanelVisible = false;
+                    }
+                });
+            },
+            
+            // 切换表情面板
+            toggleStickerPanel() {
+                const panel = document.getElementById('sticker-panel');
+                this.stickerPanelVisible = !this.stickerPanelVisible;
+                panel.style.display = this.stickerPanelVisible ? 'block' : 'none';
+            },
+            
+            // 加载消息
+            async loadMessages() {
+                try {
+                    const res = await this.api(`/message/list?target_id=${this.targetId}`);
+                    if (res.success) {
+                        this.conversationId = res.data.conversation_id;
+                        this.renderMessages(res.data.messages, true);
+                        
+                        // 更新lastMsgId
+                        if (res.data.messages.length > 0) {
+                            this.lastMsgId = Math.max(...res.data.messages.map(m => m.id));
+                        }
+                    }
+                } catch (e) {
+                    console.error('加载消息失败:', e);
+                }
+            },
+            
+            // 渲染消息
+            renderMessages(messages, clearFirst = false) {
+                const container = document.getElementById('chat-messages');
+                
+                if (clearFirst) {
+                    container.innerHTML = '';
+                }
+                
+                if (!messages || messages.length === 0) {
+                    if (clearFirst) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <p>暂无消息</p>
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+                
+                // 移除空状态提示
+                const emptyState = container.querySelector('.empty-state');
+                if (emptyState) emptyState.remove();
+                
+                messages.forEach(msg => {
+                    const isSelf = msg.sender_id === this.currentUser.id;
+                    const msgHtml = this.renderMessage(msg, isSelf);
+                    container.insertAdjacentHTML('beforeend', msgHtml);
+                });
+                
+                // 滚动到底部
+                setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                }, 100);
+            },
+            
+            // 渲染单条消息
+            renderMessage(msg, isSelf) {
+                const time = new Date(msg.created_at).toLocaleTimeString('zh-CN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                let contentHtml = '';
+                
+                if (msg.is_burned) {
+                    contentHtml = `<div class="message-text" style="color: var(--text-muted); font-style: italic;">该消息已焚毁</div>`;
+                } else {
+                    switch (msg.msg_type) {
+                        case 1: // 文字
+                            contentHtml = `<div class="message-text">${msg.content}</div>`;
+                            break;
+                        case 2: // 图片
+                            contentHtml = `<img class="message-image" src="${msg.content}" onclick="Chat.previewImage('${msg.content}')" alt="图片">`;
+                            break;
+                        case 3: // 表情
+                            contentHtml = `<div class="message-sticker">${msg.content}</div>`;
+                            break;
+                    }
+                }
+                
+                // 阅后即焚标记
+                let burnBadge = '';
+                if (!msg.is_burned && msg.burn_time) {
+                    burnBadge = `<span class="burned-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                        </svg>
+                        阅后即焚
+                    </span>`;
+                }
+                
+                const avatar = isSelf ? (this.currentUser.avatar || '') : this.targetAvatar;
+                const avatarHtml = avatar ? 
+                    `<img src="${avatar}" class="avatar small" alt="头像">` :
+                    `<div class="avatar small"><div class="avatar-placeholder">${isSelf ? (this.currentUser.nickname || '我')[0].toUpperCase() : (this.targetNickname || '用')[0].toUpperCase()}</div></div>`;
+                
+                return `
+                    <div class="message-item ${isSelf ? 'self' : ''}" data-msg-id="${msg.id}">
+                        <div class="message-avatar">${avatarHtml}</div>
+                        <div class="message-content">
+                            <div class="message-bubble">${contentHtml}</div>
+                            <div class="message-time">${time}${burnBadge}</div>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            // 发送文字消息
+            async sendMessage() {
+                const input = document.getElementById('message-input');
+                const content = input.value.trim();
+                
+                if (!content) return;
+                
+                // 清空输入
+                input.value = '';
+                input.style.height = 'auto';
+                document.getElementById('send-btn').style.opacity = '0.5';
+                
+                try {
+                    const res = await this.api('/message/send', 'POST', {
+                        target_id: this.targetId,
+                        msg_type: 1,
+                        content: content
+                    });
+                    
+                    if (res.success) {
+                        // 渲染自己的消息
+                        this.renderMessages([res.data], false);
+                        this.lastMsgId = Math.max(this.lastMsgId, res.data.id);
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('发送失败');
+                }
+            },
+            
+            // 发送表情
+            async sendSticker(sticker) {
+                // 隐藏表情面板
+                document.getElementById('sticker-panel').style.display = 'none';
+                this.stickerPanelVisible = false;
+                
+                try {
+                    const res = await this.api('/message/send', 'POST', {
+                        target_id: this.targetId,
+                        msg_type: 3,
+                        content: sticker
+                    });
+                    
+                    if (res.success) {
+                        this.renderMessages([res.data], false);
+                        this.lastMsgId = Math.max(this.lastMsgId, res.data.id);
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('发送失败');
+                }
+            },
+            
+            // 上传图片
+            async uploadImage(input) {
+                if (!input.files || !input.files[0]) return;
+                
+                const file = input.files[0];
+                input.value = '';
+                
+                // 检查文件大小
+                if (file.size > 5 * 1024 * 1024) {
+                    this.toast('图片大小不能超过5MB');
+                    return;
+                }
+                
+                // 检查文件类型
+                if (!file.type.startsWith('image/')) {
+                    this.toast('请选择图片文件');
+                    return;
+                }
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    const response = await fetch(API_BASE + '/message/upload_image', {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData
+                    });
+                    
+                    const res = await response.json();
+                    
+                    if (res.success) {
+                        // 发送图片消息
+                        const sendRes = await this.api('/message/send', 'POST', {
+                            target_id: this.targetId,
+                            msg_type: 2,
+                            content: res.data.url
+                        });
+                        
+                        if (sendRes.success) {
+                            this.renderMessages([sendRes.data], false);
+                            this.lastMsgId = Math.max(this.lastMsgId, sendRes.data.id);
+                        } else {
+                            this.toast(sendRes.message);
+                        }
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('上传失败');
+                }
+            },
+            
+            // 预览图片
+            previewImage(url) {
+                const preview = document.getElementById('image-preview');
+                const img = document.getElementById('preview-image');
+                img.src = url;
+                preview.style.display = 'flex';
+            },
+            
+            // 开始轮询
+            startPolling() {
+                this.pollTimer = setInterval(() => {
+                    this.pollNewMessages();
+                }, 3000); // 每3秒轮询
+            },
+            
+            // 停止轮询
+            stopPolling() {
+                if (this.pollTimer) {
+                    clearInterval(this.pollTimer);
+                    this.pollTimer = null;
+                }
+            },
+            
+            // 轮询新消息
+            async pollNewMessages() {
+                try {
+                    const res = await this.api(`/message/list?target_id=${this.targetId}`);
+                    if (res.success && res.data.messages.length > 0) {
+                        // 找出新消息
+                        const newMessages = res.data.messages.filter(m => m.id > this.lastMsgId);
+                        
+                        if (newMessages.length > 0) {
+                            // 标记已读并设置焚毁时间
+                            newMessages.forEach(msg => {
+                                if (msg.sender_id !== this.currentUser.id && !msg.is_read && !msg.is_burned) {
+                                    this.api('/message/mark_read', 'POST', { msg_id: msg.id });
+                                }
+                            });
+                            
+                            // 渲染新消息
+                            this.renderMessages(newMessages, false);
+                            this.lastMsgId = Math.max(...res.data.messages.map(m => m.id));
+                        }
+                    }
+                } catch (e) {
+                    console.error('轮询消息失败:', e);
+                }
+            },
+            
+            // 显示菜单
+            showMenu() {
+                // 简单实现：删除会话
+                if (confirm('确定要删除此会话吗？')) {
+                    this.deleteConversation();
+                }
+            },
+            
+            // 删除会话
+            async deleteConversation() {
+                try {
+                    const res = await this.api('/conversation/delete', 'POST', {
+                        conversation_id: this.conversationId
+                    });
+                    
+                    if (res.success) {
+                        this.toast('会话已删除');
+                        this.back();
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('操作失败');
+                }
+            },
+            
+            // 返回
+            back() {
+                this.stopPolling();
+                window.location.href = 'index.html';
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            Chat.init();
+        });
+    </script>
+</body>
+</html>
