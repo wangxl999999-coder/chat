@@ -98,23 +98,34 @@ switch ($action) {
                 $params[] = $lastMsgId;
             }
             
-            // 查询群聊消息 - 关联发送者信息
+            // 查询群聊消息 - 关联发送者信息和收藏状态
             $stmt = $pdo->prepare("
                 SELECT m.id, m.conversation_id, m.sender_id, m.receiver_id, m.group_id, 
                        m.msg_type, m.content, m.is_read, m.is_burned, m.burn_time, m.created_at,
                        u.nickname as sender_nickname, u.avatar as sender_avatar,
-                       gm.nickname as group_nickname
+                       gm.nickname as group_nickname,
+                       f.id as favorite_id
                 FROM messages m
                 LEFT JOIN users u ON m.sender_id = u.id
                 LEFT JOIN group_members gm ON m.sender_id = gm.user_id AND gm.group_id = m.group_id
+                LEFT JOIN favorites f ON f.msg_id = m.id AND f.user_id = ?
                 WHERE {$where}
                 ORDER BY m.id ASC
                 LIMIT ?
             ");
-            $params[] = $limit;
-            $stmt->execute($params);
+            $newParams = [$currentUser['id']];
+            foreach ($params as $p) {
+                $newParams[] = $p;
+            }
+            $newParams[] = $limit;
+            $stmt->execute($newParams);
             
             $messages = $stmt->fetchAll();
+            
+            // 添加 is_favorited 字段
+            foreach ($messages as &$msg) {
+                $msg['is_favorited'] = !empty($msg['favorite_id']) ? 1 : 0;
+            }
             
             // 更新群成员的最后阅读消息ID
             if (!empty($messages)) {
@@ -161,21 +172,32 @@ switch ($action) {
                 $params[] = $lastMsgId;
             }
             
-            // 查询消息 - 按时间排序
+            // 查询消息 - 按时间排序，关联收藏状态
             $stmt = $pdo->prepare("
                 SELECT m.id, m.sender_id, m.receiver_id, m.group_id, m.msg_type, m.content, 
                        m.is_read, m.is_burned, m.burn_time, m.created_at,
-                       u.nickname as sender_nickname, u.avatar as sender_avatar
+                       u.nickname as sender_nickname, u.avatar as sender_avatar,
+                       f.id as favorite_id
                 FROM messages m
                 LEFT JOIN users u ON m.sender_id = u.id
+                LEFT JOIN favorites f ON f.msg_id = m.id AND f.user_id = ?
                 WHERE {$where}
                 ORDER BY m.id ASC
                 LIMIT ?
             ");
-            $params[] = $limit;
-            $stmt->execute($params);
+            $newParams = [$currentUser['id']];
+            foreach ($params as $p) {
+                $newParams[] = $p;
+            }
+            $newParams[] = $limit;
+            $stmt->execute($newParams);
             
             $messages = $stmt->fetchAll();
+            
+            // 添加 is_favorited 字段
+            foreach ($messages as &$msg) {
+                $msg['is_favorited'] = !empty($msg['favorite_id']) ? 1 : 0;
+            }
             
             // 标记对方发送的消息为已读
             $stmt = $pdo->prepare("

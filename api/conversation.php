@@ -12,16 +12,52 @@ switch ($action) {
     case 'list':
         // 获取会话列表
         $stmt = $pdo->prepare("
-            SELECT c.id, c.user_id, c.target_id, c.last_message, c.last_message_time, 
-                   c.unread_count, c.created_at, c.updated_at,
-                   u.user_number, u.nickname, u.avatar, u.gender, u.status
+            SELECT c.id, c.user_id, c.target_id, c.type, c.last_message, c.last_message_time, 
+                   c.unread_count, c.created_at, c.updated_at
             FROM conversations c
-            LEFT JOIN users u ON c.target_id = u.id
             WHERE c.user_id = ?
             ORDER BY c.last_message_time DESC
         ");
         $stmt->execute([$currentUser['id']]);
         $conversations = $stmt->fetchAll();
+        
+        // 补充会话信息（单聊关联users表，群聊关联groups表）
+        foreach ($conversations as &$conv) {
+            if ($conv['type'] == 2) {
+                // 群聊
+                $stmt = $pdo->prepare("
+                    SELECT id as group_id, group_name as nickname, group_avatar as avatar
+                    FROM `groups` WHERE id = ?
+                ");
+                $stmt->execute([$conv['target_id']]);
+                $group = $stmt->fetch();
+                if ($group) {
+                    $conv['nickname'] = $group['nickname'];
+                    $conv['avatar'] = $group['avatar'];
+                } else {
+                    $conv['nickname'] = '群组已解散';
+                    $conv['avatar'] = '';
+                }
+            } else {
+                // 单聊
+                $stmt = $pdo->prepare("
+                    SELECT id, user_number, nickname, avatar, gender, status
+                    FROM users WHERE id = ?
+                ");
+                $stmt->execute([$conv['target_id']]);
+                $user = $stmt->fetch();
+                if ($user) {
+                    $conv['user_number'] = $user['user_number'];
+                    $conv['nickname'] = $user['nickname'];
+                    $conv['avatar'] = $user['avatar'];
+                    $conv['gender'] = $user['gender'];
+                    $conv['status'] = $user['status'];
+                } else {
+                    $conv['nickname'] = '用户已注销';
+                    $conv['avatar'] = '';
+                }
+            }
+        }
         
         // 统计总未读数
         $totalUnread = 0;
