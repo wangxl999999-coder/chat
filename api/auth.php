@@ -94,9 +94,14 @@ switch ($action) {
             // 密码加密
             $passwordHash = encryptPassword($password);
             
-            // 如果没有头像，使用默认头像
-            if (empty($avatar)) {
-                $avatar = '';
+            // 如果有头像，保存 base64 图片到文件
+            if (!empty($avatar)) {
+                $uploadResult = uploadImageFromBase64($avatar, 'avatars');
+                if ($uploadResult['success']) {
+                    $avatar = $uploadResult['data']['url'];
+                } else {
+                    $avatar = '';
+                }
             }
             
             // 插入用户数据

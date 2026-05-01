@@ -1,4 +1,4 @@
-const API_BASE = '/chat/api/index.php';
+const API_BASE = '/api/index.php';
 
 // 工具函数
 const App = {
@@ -157,6 +157,47 @@ const App = {
             friendRequestsBtn.addEventListener('click', () => {
                 this.showFriendRequests();
             });
+        }
+        
+        // 好友申请页面返回
+        const requestsBackBtn = document.getElementById('requests-back-btn');
+        if (requestsBackBtn) {
+            requestsBackBtn.addEventListener('click', () => {
+                this.hideFriendRequests();
+            });
+        }
+        
+        // 点击页面其他区域关闭弹出菜单
+        document.addEventListener('click', (e) => {
+            const popupMenu = document.getElementById('popup-menu');
+            const addBtn = document.querySelector('[onclick="App.showAddMenu()"]');
+            if (popupMenu && !popupMenu.contains(e.target) && (!addBtn || !addBtn.contains(e.target))) {
+                this.hideAddMenu();
+            }
+        });
+    },
+    
+    // 显示添加菜单
+    showAddMenu() {
+        const popupMenu = document.getElementById('popup-menu');
+        if (popupMenu) {
+            popupMenu.style.display = 'block';
+        }
+    },
+    
+    // 隐藏添加菜单
+    hideAddMenu() {
+        const popupMenu = document.getElementById('popup-menu');
+        if (popupMenu) {
+            popupMenu.style.display = 'none';
+        }
+    },
+    
+    // 隐藏好友申请页面
+    hideFriendRequests() {
+        const requestsPage = document.getElementById('friend-requests-page');
+        if (requestsPage) {
+            requestsPage.style.display = 'none';
         }
     },
     

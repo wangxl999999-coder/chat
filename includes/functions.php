@@ -150,6 +150,91 @@ function isValidPassword($password) {
     return $len >= 6 && $len <= 20;
 }
 
+// 从 base64 字符串上传图片
+function uploadImageFromBase64($base64Data, $subDir = '') {
+    if (empty($base64Data)) {
+        return [
+            'success' => false,
+            'message' => '图片数据为空'
+        ];
+    }
+    
+    // 解析 base64 数据
+    if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $matches)) {
+        $imageType = strtolower($matches[1]);
+        $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
+    } else {
+        // 尝试直接解码
+        $imageType = 'png';
+    }
+    
+    $decodedData = base64_decode($base64Data);
+    
+    if ($decodedData === false) {
+        return [
+            'success' => false,
+            'message' => '图片解码失败'
+        ];
+    }
+    
+    // 检查文件大小
+    if (strlen($decodedData) > MAX_IMAGE_SIZE) {
+        return [
+            'success' => false,
+            'message' => '文件大小不能超过5MB'
+        ];
+    }
+    
+    // 临时保存文件以进行类型检查
+    $tempFile = tempnam(sys_get_temp_dir(), 'img_');
+    file_put_contents($tempFile, $decodedData);
+    
+    // 检查文件类型
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $tempFile);
+    finfo_close($finfo);
+    
+    if (!in_array($mimeType, ALLOWED_IMAGE_TYPES)) {
+        unlink($tempFile);
+        return [
+            'success' => false,
+            'message' => '不支持的文件类型'
+        ];
+    }
+    
+    // 生成文件名
+    $extension = image_type_to_extension(exif_imagetype($tempFile));
+    $filename = uniqid() . $extension;
+    
+    // 构建保存路径
+    $uploadPath = UPLOAD_PATH . ltrim($subDir, '/');
+    if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0755, true);
+    }
+    
+    $filepath = $uploadPath . '/' . $filename;
+    
+    // 移动文件
+    if (rename($tempFile, $filepath)) {
+        $url = UPLOAD_URL . ltrim($subDir, '/') . '/' . $filename;
+        return [
+            'success' => true,
+            'message' => '上传成功',
+            'data' => [
+                'filename' => $filename,
+                'filepath' => $filepath,
+                'url' => $url
+            ]
+        ];
+    } else {
+        unlink($tempFile);
+        return [
+            'success' => false,
+            'message' => '文件保存失败'
+        ];
+    }
+}
+
 // 上传图片
 function uploadImage($file, $subDir = '') {
     // 检查文件是否有错误

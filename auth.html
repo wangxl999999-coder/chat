@@ -63,6 +63,26 @@
             
             <!-- 注册表单 -->
             <form id="register-form" class="auth-form">
+                <div class="form-group" style="text-align: center;">
+                    <label class="form-label">头像</label>
+                    <div style="display: inline-block; position: relative;">
+                        <div id="reg-avatar-preview" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #8b5cf6); display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 600; cursor: pointer; border: 3px solid var(--primary-light);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 36px; height: 36px;">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                        </div>
+                        <input type="file" id="reg-avatar-upload" accept="image/*" style="display: none;" onchange="Auth.handleAvatarUpload(this)">
+                        <div style="position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white;" onclick="document.getElementById('reg-avatar-upload').click()">
+                            <svg viewBox="0 0 24 24" fill="white" stroke="none" style="width: 16px; height: 16px;">
+                                <path d="M12 4v16m8-8H4"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">点击上传头像（可选）</div>
+                </div>
                 <div class="form-group">
                     <label class="form-label">昵称</label>
                     <input type="text" class="form-input" id="reg-nickname" placeholder="请输入昵称（2-20个字符）">
@@ -102,9 +122,37 @@
             currentTab: 'login',
             codeTimer: null,
             smsCodeTimer: null,
+            avatarBase64: '',
             
             init() {
                 this.bindEvents();
+            },
+            
+            handleAvatarUpload(input) {
+                const file = input.files[0];
+                if (!file) return;
+                
+                if (!file.type.startsWith('image/')) {
+                    this.toast('请选择图片文件');
+                    return;
+                }
+                
+                if (file.size > 5 * 1024 * 1024) {
+                    this.toast('图片大小不能超过5MB');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64 = e.target.result;
+                    this.avatarBase64 = base64;
+                    const preview = document.getElementById('reg-avatar-preview');
+                    preview.style.backgroundImage = `url(${base64})`;
+                    preview.style.backgroundSize = 'cover';
+                    preview.style.backgroundPosition = 'center';
+                    preview.innerHTML = '';
+                };
+                reader.readAsDataURL(file);
             },
             
             bindEvents() {
@@ -377,13 +425,19 @@
                     return;
                 }
                 
+                const requestData = {
+                    nickname,
+                    phone,
+                    code,
+                    password
+                };
+                
+                if (this.avatarBase64) {
+                    requestData.avatar = this.avatarBase64;
+                }
+                
                 try {
-                    const res = await this.api('/auth/register', 'POST', {
-                        nickname,
-                        phone,
-                        code,
-                        password
-                    });
+                    const res = await this.api('/auth/register', 'POST', requestData);
                     
                     if (res.success) {
                         this.toast('注册成功');
