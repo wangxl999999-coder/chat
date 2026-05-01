@@ -175,6 +175,89 @@ function initDB() {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='点赞表'
         ");
         
+        // 群组表
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `groups` (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                group_name VARCHAR(100) NOT NULL COMMENT '群名称',
+                group_avatar VARCHAR(255) DEFAULT '' COMMENT '群头像',
+                group_announcement TEXT COMMENT '群公告',
+                creator_id INT NOT NULL COMMENT '创建者ID',
+                max_members INT DEFAULT 200 COMMENT '最大成员数',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_creator_id (creator_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='群组表'
+        ");
+        
+        // 群成员表
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS group_members (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                group_id INT NOT NULL COMMENT '群组ID',
+                user_id INT NOT NULL COMMENT '用户ID',
+                nickname VARCHAR(50) DEFAULT '' COMMENT '群内昵称',
+                role TINYINT DEFAULT 0 COMMENT '角色: 0普通成员 1管理员 2群主',
+                join_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '入群时间',
+                last_read_msg_id INT DEFAULT 0 COMMENT '最后阅读的消息ID',
+                UNIQUE KEY unique_group_member (group_id, user_id),
+                FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_group_id (group_id),
+                INDEX idx_user_id (user_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='群成员表'
+        ");
+        
+        // 收藏表
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS favorites (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL COMMENT '用户ID',
+                msg_id INT DEFAULT NULL COMMENT '消息ID（来自消息表）',
+                msg_type TINYINT DEFAULT 1 COMMENT '消息类型: 1文字 2图片 3表情',
+                content TEXT NOT NULL COMMENT '收藏内容',
+                sender_id INT DEFAULT NULL COMMENT '发送者ID',
+                sender_nickname VARCHAR(50) DEFAULT '' COMMENT '发送者昵称',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL,
+                INDEX idx_user_id (user_id),
+                INDEX idx_created_at (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏表'
+        ");
+        
+        // 用户设置表
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS user_settings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL COMMENT '用户ID',
+                setting_key VARCHAR(50) NOT NULL COMMENT '设置项名称',
+                setting_value TEXT COMMENT '设置项值',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_setting (user_id, setting_key),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_user_id (user_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户设置表'
+        ");
+        
+        // 为消息表添加 group_id 字段以支持群聊
+        try {
+            $pdo->exec("ALTER TABLE messages ADD COLUMN group_id INT DEFAULT NULL COMMENT '群组ID（群聊消息）' AFTER receiver_id");
+            $pdo->exec("ALTER TABLE messages ADD INDEX idx_group_id (group_id)");
+            $pdo->exec("ALTER TABLE messages ADD FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE");
+        } catch (PDOException $e) {
+            // 字段可能已存在，忽略错误
+        }
+        
+        // 为会话表添加 type 字段以区分单聊和群聊
+        try {
+            $pdo->exec("ALTER TABLE conversations ADD COLUMN type TINYINT DEFAULT 1 COMMENT '会话类型: 1单聊 2群聊' AFTER target_id");
+        } catch (PDOException $e) {
+            // 字段可能已存在，忽略错误
+        }
+        
         // 插入默认管理员（用户名: admin, 密码: admin123）
         $defaultAdmin = $pdo->prepare("INSERT IGNORE INTO admins (username, password, role) VALUES (?, ?, 2)");
         $defaultAdmin->execute(['admin', password_hash('admin123', PASSWORD_DEFAULT)]);

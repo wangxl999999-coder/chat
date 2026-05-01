@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>设置 - 阅后即焚</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .settings-section {
+            margin-bottom: 20px;
+        }
+        .settings-section-title {
+            font-size: 13px;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        .settings-item:active {
+            background: var(--bg-secondary);
+        }
+        .settings-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .settings-label svg {
+            width: 22px;
+            height: 22px;
+            color: var(--text-secondary);
+        }
+        .settings-text {
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+        .settings-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .settings-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .settings-value svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            background: var(--bg-secondary);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .toggle-switch.active {
+            background: var(--primary-color);
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: left 0.3s;
+        }
+        .toggle-switch.active::after {
+            left: 24px;
+        }
+        
+        .delay-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 16px 16px;
+            background: var(--bg-primary);
+        }
+        .delay-option {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .delay-option:hover {
+            border-color: var(--primary-color);
+        }
+        .delay-option.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+        
+        .burn-info {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border-left: 3px solid var(--primary-color);
+            margin: 12px 16px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+        .burn-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin: 0;
+        }
+        .burn-info strong {
+            color: var(--primary-color);
+        }
+        
+        .danger-section {
+            background: var(--danger-color);
+            color: white;
+            padding: 12px 16px;
+            margin: 16px;
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+        .danger-section .settings-text {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <button class="chat-back-btn" onclick="Settings.back()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <h1>设置</h1>
+            <div style="width: 40px;"></div>
+        </header>
+        
+        <div class="app-main" style="padding-top: 0; padding-bottom: 30px;">
+            <div class="settings-section">
+                <div class="settings-section-title">隐私安全</div>
+                
+                <div class="settings-item">
+                    <div class="settings-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                        </svg>
+                        <div>
+                            <div class="settings-text">阅后即焚</div>
+                            <div class="settings-subtitle">开启后，消息将在您阅读后自动销毁</div>
+                        </div>
+                    </div>
+                    <div class="toggle-switch" id="burn-toggle" onclick="Settings.toggleBurn()"></div>
+                </div>
+                
+                <div id="burn-delay-section" style="display: none;">
+                    <div class="settings-item" style="cursor: default;">
+                        <div class="settings-label">
+                            <div class="settings-text">焚毁延迟</div>
+                        </div>
+                        <div class="settings-value">
+                            <span id="current-delay">10秒</span>
+                        </div>
+                    </div>
+                    <div class="delay-options">
+                        <div class="delay-option" onclick="Settings.setDelay(5)">5秒</div>
+                        <div class="delay-option active" onclick="Settings.setDelay(10)">10秒</div>
+                        <div class="delay-option" onclick="Settings.setDelay(30)">30秒</div>
+                        <div class="delay-option" onclick="Settings.setDelay(60)">1分钟</div>
+                        <div class="delay-option" onclick="Settings.setDelay(300)">5分钟</div>
+                        <div class="delay-option" onclick="Settings.setDelay(86400)">24小时</div>
+                    </div>
+                </div>
+                
+                <div id="burn-info" class="burn-info" style="display: none;">
+                    <p>
+                        <strong>注意：</strong>开启阅后即焚后，您收到的消息在您阅读后将按设定时间自动销毁。
+                        已焚毁的消息内容将变为"该消息已焚毁"，无法恢复。
+                        此设置仅影响您接收的消息，不影响您发送给他人的消息（取决于对方的设置）。
+                    </p>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <div class="settings-section-title">通知</div>
+                
+                <div class="settings-item">
+                    <div class="settings-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <div class="settings-text">消息通知</div>
+                    </div>
+                    <div class="toggle-switch active" id="notification-toggle" onclick="Settings.toggleNotification()"></div>
+                </div>
+                
+                <div class="settings-item">
+                    <div class="settings-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                        <div class="settings-text">提示声音</div>
+                    </div>
+                    <div class="toggle-switch active" id="sound-toggle" onclick="Settings.toggleSound()"></div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <div class="settings-section-title">其他</div>
+                
+                <div class="settings-item" style="cursor: pointer;" onclick="Settings.resetSettings()">
+                    <div class="settings-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 4v6h-6"></path>
+                            <path d="M1 20v-6h6"></path>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <div class="settings-text">重置设置</div>
+                    </div>
+                    <div class="settings-value">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="settings-item" style="cursor: default;">
+                    <div class="settings-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <div class="settings-text">关于</div>
+                    </div>
+                    <div class="settings-value">
+                        <span>v1.0.0</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/api/index.php';
+        
+        const Settings = {
+            settings: {
+                burn_after_read: false,
+                burn_delay_seconds: 10,
+                notification_enabled: true,
+                sound_enabled: true
+            },
+            
+            parseEndpoint(endpoint) {
+                let path = endpoint.split('?')[0];
+                path = path.replace(/^\//, '');
+                const parts = path.split('/');
+                return {
+                    module: parts[0] || '',
+                    action: parts[1] || ''
+                };
+            },
+            
+            getQueryString(endpoint) {
+                const qIndex = endpoint.indexOf('?');
+                if (qIndex !== -1) {
+                    return '&' + endpoint.substring(qIndex + 1);
+                }
+                return '';
+            },
+            
+            async api(endpoint, method = 'GET', data = null) {
+                const { module, action } = this.parseEndpoint(endpoint);
+                const queryString = this.getQueryString(endpoint);
+                const url = API_BASE + '?module=' + module + '&action=' + action + queryString;
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                };
+                
+                if (data && method !== 'GET') {
+                    options.body = JSON.stringify(data);
+                }
+                
+                try {
+                    const response = await fetch(url, options);
+                    const result = await response.json();
+                    return result;
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            toast(message, duration = 2000) {
+                const existingToast = document.querySelector('.toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, duration);
+            },
+            
+            async init() {
+                const loggedIn = await this.checkLogin();
+                if (!loggedIn) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+                
+                await this.loadSettings();
+            },
+            
+            async checkLogin() {
+                try {
+                    const res = await this.api('/auth/check_login');
+                    return res.success;
+                } catch (e) {
+                    console.error('检查登录失败:', e);
+                    return false;
+                }
+            },
+            
+            async loadSettings() {
+                try {
+                    const res = await this.api('/settings/get');
+                    if (res.success) {
+                        this.settings = { ...this.settings, ...res.data };
+                        this.updateUI();
+                    }
+                } catch (e) {
+                    console.error('加载设置失败:', e);
+                    this.toast('加载设置失败');
+                }
+            },
+            
+            updateUI() {
+                const burnToggle = document.getElementById('burn-toggle');
+                const burnDelaySection = document.getElementById('burn-delay-section');
+                const burnInfo = document.getElementById('burn-info');
+                const currentDelayEl = document.getElementById('current-delay');
+                
+                if (this.settings.burn_after_read) {
+                    burnToggle.classList.add('active');
+                    burnDelaySection.style.display = 'block';
+                    burnInfo.style.display = 'block';
+                } else {
+                    burnToggle.classList.remove('active');
+                    burnDelaySection.style.display = 'none';
+                    burnInfo.style.display = 'none';
+                }
+                
+                currentDelayEl.textContent = this.formatDelay(this.settings.burn_delay_seconds);
+                
+                document.querySelectorAll('.delay-option').forEach(el => {
+                    el.classList.remove('active');
+                    const delay = parseInt(el.getAttribute('onclick').match(/\d+/)[0]);
+                    if (delay === this.settings.burn_delay_seconds) {
+                        el.classList.add('active');
+                    }
+                });
+                
+                const notificationToggle = document.getElementById('notification-toggle');
+                if (this.settings.notification_enabled) {
+                    notificationToggle.classList.add('active');
+                } else {
+                    notificationToggle.classList.remove('active');
+                }
+                
+                const soundToggle = document.getElementById('sound-toggle');
+                if (this.settings.sound_enabled) {
+                    soundToggle.classList.add('active');
+                } else {
+                    soundToggle.classList.remove('active');
+                }
+            },
+            
+            formatDelay(seconds) {
+                if (seconds < 60) {
+                    return seconds + '秒';
+                } else if (seconds < 3600) {
+                    return (seconds / 60) + '分钟';
+                } else if (seconds < 86400) {
+                    return (seconds / 3600) + '小时';
+                } else {
+                    return '24小时';
+                }
+            },
+            
+            async toggleBurn() {
+                const newValue = !this.settings.burn_after_read;
+                
+                try {
+                    const res = await this.api('/settings/set', 'POST', {
+                        key: 'burn_after_read',
+                        value: newValue
+                    });
+                    
+                    if (res.success) {
+                        this.settings.burn_after_read = newValue;
+                        this.updateUI();
+                        
+                        if (newValue) {
+                            this.toast('阅后即焚已开启，消息将在您阅读后 ' + this.formatDelay(this.settings.burn_delay_seconds) + ' 自动焚毁');
+                        } else {
+                            this.toast('阅后即焚已关闭');
+                        }
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('设置失败');
+                }
+            },
+            
+            async setDelay(seconds) {
+                try {
+                    const res = await this.api('/settings/set', 'POST', {
+                        key: 'burn_delay_seconds',
+                        value: seconds
+                    });
+                    
+                    if (res.success) {
+                        this.settings.burn_delay_seconds = seconds;
+                        this.updateUI();
+                        this.toast('焚毁延迟已设置为 ' + this.formatDelay(seconds));
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('设置失败');
+                }
+            },
+            
+            async toggleNotification() {
+                const newValue = !this.settings.notification_enabled;
+                
+                try {
+                    const res = await this.api('/settings/set', 'POST', {
+                        key: 'notification_enabled',
+                        value: newValue
+                    });
+                    
+                    if (res.success) {
+                        this.settings.notification_enabled = newValue;
+                        this.updateUI();
+                        this.toast(newValue ? '消息通知已开启' : '消息通知已关闭');
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('设置失败');
+                }
+            },
+            
+            async toggleSound() {
+                const newValue = !this.settings.sound_enabled;
+                
+                try {
+                    const res = await this.api('/settings/set', 'POST', {
+                        key: 'sound_enabled',
+                        value: newValue
+                    });
+                    
+                    if (res.success) {
+                        this.settings.sound_enabled = newValue;
+                        this.updateUI();
+                        this.toast(newValue ? '提示声音已开启' : '提示声音已关闭');
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('设置失败');
+                }
+            },
+            
+            async resetSettings() {
+                if (!confirm('确定要重置所有设置为默认值吗？')) return;
+                
+                try {
+                    const res = await this.api('/settings/reset', 'POST');
+                    
+                    if (res.success) {
+                        this.settings = {
+                            burn_after_read: false,
+                            burn_delay_seconds: 10,
+                            notification_enabled: true,
+                            sound_enabled: true
+                        };
+                        this.updateUI();
+                        this.toast('所有设置已重置为默认值');
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('重置失败');
+                }
+            },
+            
+            back() {
+                window.location.href = 'index.html';
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            Settings.init();
+        });
+    </script>
+</body>
+</html>

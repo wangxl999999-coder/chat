@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的收藏 - 阅后即焚</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .favorite-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .favorite-item:active {
+            background-color: var(--bg-secondary);
+        }
+        .favorite-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .favorite-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .favorite-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .favorite-sender {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .favorite-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+        .favorite-content {
+            padding-left: 46px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .favorite-content img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: var(--radius-md);
+            margin-top: 4px;
+            cursor: pointer;
+        }
+        .favorite-content .sticker {
+            font-size: 48px;
+            display: inline-block;
+        }
+        .favorite-actions {
+            position: absolute;
+            right: 16px;
+            top: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .favorite-item:hover .favorite-actions,
+        .favorite-item:active .favorite-actions {
+            opacity: 1;
+        }
+        .delete-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        .empty-favorites {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .empty-favorites svg {
+            width: 80px;
+            height: 80px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .empty-favorites h3 {
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .empty-favorites p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .msg-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 4px;
+            margin-right: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <button class="chat-back-btn" onclick="Favorites.back()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <h1>我的收藏</h1>
+            <div style="width: 40px;"></div>
+        </header>
+        
+        <div class="app-main" style="padding-top: 0; padding-bottom: 0;">
+            <div id="favorites-list" style="min-height: 200px;">
+            </div>
+            <div id="empty-favorites" class="empty-favorites" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <h3>暂无收藏</h3>
+                <p>在聊天中长按消息可以收藏内容</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="image-preview" class="image-preview" style="display: none;" onclick="this.style.display='none'">
+        <button class="image-preview-close" onclick="document.getElementById('image-preview').style.display='none'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <img id="preview-image" src="" alt="图片预览">
+    </div>
+    
+    <script>
+        const API_BASE = '/api/index.php';
+        
+        const Favorites = {
+            currentPage: 1,
+            pageSize: 20,
+            hasMore: true,
+            loading: false,
+            
+            parseEndpoint(endpoint) {
+                let path = endpoint.split('?')[0];
+                path = path.replace(/^\//, '');
+                const parts = path.split('/');
+                return {
+                    module: parts[0] || '',
+                    action: parts[1] || ''
+                };
+            },
+            
+            getQueryString(endpoint) {
+                const qIndex = endpoint.indexOf('?');
+                if (qIndex !== -1) {
+                    return '&' + endpoint.substring(qIndex + 1);
+                }
+                return '';
+            },
+            
+            async api(endpoint, method = 'GET', data = null) {
+                const { module, action } = this.parseEndpoint(endpoint);
+                const queryString = this.getQueryString(endpoint);
+                const url = API_BASE + '?module=' + module + '&action=' + action + queryString;
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                };
+                
+                if (data && method !== 'GET') {
+                    options.body = JSON.stringify(data);
+                }
+                
+                try {
+                    const response = await fetch(url, options);
+                    const result = await response.json();
+                    return result;
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            toast(message, duration = 2000) {
+                const existingToast = document.querySelector('.toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, duration);
+            },
+            
+            async init() {
+                const loggedIn = await this.checkLogin();
+                if (!loggedIn) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+                
+                this.loadFavorites();
+            },
+            
+            async checkLogin() {
+                try {
+                    const res = await this.api('/auth/check_login');
+                    return res.success;
+                } catch (e) {
+                    console.error('检查登录失败:', e);
+                    return false;
+                }
+            },
+            
+            async loadFavorites() {
+                if (this.loading || !this.hasMore) return;
+                
+                this.loading = true;
+                
+                try {
+                    const res = await this.api(`/favorite/list?page=${this.currentPage}&page_size=${this.pageSize}`);
+                    
+                    if (res.success) {
+                        this.renderFavorites(res.data.list, this.currentPage === 1);
+                        
+                        if (res.data.list.length < this.pageSize) {
+                            this.hasMore = false;
+                        } else {
+                            this.currentPage++;
+                        }
+                    }
+                } catch (e) {
+                    console.error('加载收藏失败:', e);
+                    this.toast('加载失败');
+                }
+                
+                this.loading = false;
+            },
+            
+            renderFavorites(favorites, clearFirst = false) {
+                const container = document.getElementById('favorites-list');
+                const emptyState = document.getElementById('empty-favorites');
+                
+                if (clearFirst) {
+                    container.innerHTML = '';
+                }
+                
+                if (!favorites || favorites.length === 0) {
+                    if (clearFirst) {
+                        emptyState.style.display = 'flex';
+                        container.style.display = 'none';
+                    }
+                    return;
+                }
+                
+                emptyState.style.display = 'none';
+                container.style.display = 'block';
+                
+                favorites.forEach(fav => {
+                    const itemHtml = this.renderFavoriteItem(fav);
+                    container.insertAdjacentHTML('beforeend', itemHtml);
+                });
+            },
+            
+            renderFavoriteItem(fav) {
+                const displayName = fav.sender_nickname || '用户';
+                const avatarHtml = fav.sender_avatar ? 
+                    `<img src="${fav.sender_avatar}" alt="${displayName}">` :
+                    `<div style="color: var(--text-muted); font-size: 14px;">${displayName[0].toUpperCase()}</div>`;
+                
+                const time = this.formatTime(fav.created_at);
+                const msgTime = this.formatTime(fav.msg_time);
+                
+                let contentHtml = '';
+                let typeBadge = '';
+                
+                switch (fav.msg_type) {
+                    case 1:
+                        typeBadge = '<span class="msg-type-badge">文字</span>';
+                        contentHtml = `<div style="word-break: break-all;">${this.escapeHtml(fav.display_content || fav.message_content)}</div>`;
+                        break;
+                    case 2:
+                        typeBadge = '<span class="msg-type-badge">图片</span>';
+                        contentHtml = `<img src="${fav.display_content || fav.message_content}" onclick="Favorites.previewImage('${fav.display_content || fav.message_content}')" alt="图片">`;
+                        break;
+                    case 3:
+                        typeBadge = '<span class="msg-type-badge">表情</span>';
+                        contentHtml = `<div class="sticker">${fav.display_content || fav.message_content}</div>`;
+                        break;
+                    default:
+                        typeBadge = '<span class="msg-type-badge">其他</span>';
+                        contentHtml = `<div>${this.escapeHtml(fav.display_content || fav.message_content)}</div>`;
+                }
+                
+                return `
+                    <div class="favorite-item" data-favorite-id="${fav.id}" data-msg-id="${fav.msg_id}">
+                        <div class="favorite-header">
+                            <div class="favorite-avatar">${avatarHtml}</div>
+                            <span class="favorite-sender">${displayName}</span>
+                            <span class="favorite-time">${time}</span>
+                            <div class="favorite-actions">
+                                <button class="delete-btn" onclick="event.stopPropagation(); Favorites.removeFavorite(${fav.id}, this)">删除</button>
+                            </div>
+                        </div>
+                        <div class="favorite-content">
+                            ${typeBadge}
+                            ${contentHtml}
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                                原消息时间: ${msgTime}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+            
+            formatTime(timeStr) {
+                if (!timeStr) return '';
+                
+                const time = new Date(timeStr);
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const msgDate = new Date(time.getFullYear(), time.getMonth(), time.getDate());
+                
+                const diffDays = Math.floor((today - msgDate) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 0) {
+                    return time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                } else if (diffDays === 1) {
+                    return '昨天';
+                } else if (diffDays < 7) {
+                    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+                    return weekdays[time.getDay()];
+                } else {
+                    return `${time.getFullYear()}/${time.getMonth() + 1}/${time.getDate()}`;
+                }
+            },
+            
+            async removeFavorite(favoriteId, btn) {
+                if (!confirm('确定要删除此收藏吗？')) return;
+                
+                try {
+                    const res = await this.api('/favorite/remove', 'POST', { favorite_id: favoriteId });
+                    
+                    if (res.success) {
+                        const item = btn.closest('.favorite-item');
+                        if (item) {
+                            item.style.transition = 'opacity 0.3s';
+                            item.style.opacity = '0';
+                            setTimeout(() => {
+                                item.remove();
+                                this.checkEmpty();
+                            }, 300);
+                        }
+                        this.toast('已删除');
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('删除失败');
+                }
+            },
+            
+            checkEmpty() {
+                const container = document.getElementById('favorites-list');
+                const emptyState = document.getElementById('empty-favorites');
+                
+                if (container.children.length === 0) {
+                    container.style.display = 'none';
+                    emptyState.style.display = 'flex';
+                }
+            },
+            
+            previewImage(url) {
+                const preview = document.getElementById('image-preview');
+                const img = document.getElementById('preview-image');
+                img.src = url;
+                preview.style.display = 'flex';
+            },
+            
+            back() {
+                window.location.href = 'index.html';
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            Favorites.init();
+        });
+    </script>
+</body>
+</html>

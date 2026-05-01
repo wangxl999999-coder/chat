@@ -39,7 +39,7 @@ if (empty($module)) {
 }
 
 // 检查是否需要登录
-$protectedModules = ['user', 'friend', 'message', 'conversation', 'moments'];
+$protectedModules = ['user', 'friend', 'message', 'conversation', 'moments', 'group', 'favorite', 'settings'];
 if (in_array($module, $protectedModules)) {
     if (!isLoggedIn()) {
         jsonResponse(false, '请先登录');
@@ -85,6 +85,18 @@ switch ($module) {
         
     case 'moments':
         require_once 'moments.php';
+        break;
+        
+    case 'group':
+        require_once 'group.php';
+        break;
+        
+    case 'favorite':
+        require_once 'favorite.php';
+        break;
+        
+    case 'settings':
+        require_once 'settings.php';
         break;
         
     default:

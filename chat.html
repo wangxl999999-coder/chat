@@ -5,10 +5,181 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>聊天 - 阅后即焚</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .message-item {
+            position: relative;
+        }
+        .message-bubble {
+            position: relative;
+            max-width: 70%;
+        }
+        .message-sender-name {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            padding-left: 4px;
+        }
+        .message-self .message-sender-name {
+            text-align: right;
+            padding-right: 4px;
+            padding-left: 0;
+        }
+        
+        .message-actions-menu {
+            position: fixed;
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 120px;
+            overflow: hidden;
+        }
+        .message-action-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .message-action-item:last-child {
+            border-bottom: none;
+        }
+        .message-action-item:active {
+            background: var(--bg-secondary);
+        }
+        .message-action-item.danger {
+            color: var(--danger-color);
+        }
+        .message-action-item svg {
+            width: 18px;
+            height: 18px;
+            color: inherit;
+        }
+        
+        .message-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999;
+            background: transparent;
+        }
+        
+        .burn-timer {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .burned-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+        
+        .favorite-badge {
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--warning-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        .group-member-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .group-member-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .group-member-item:last-child {
+            border-bottom: none;
+        }
+        .group-member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .group-member-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .group-member-info {
+            flex: 1;
+        }
+        .group-member-name {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        .group-member-role {
+            font-size: 12px;
+            color: var(--primary-color);
+        }
+        
+        .chat-detail-modal {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            max-width: 400px;
+            background: var(--bg-primary);
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        .chat-detail-modal.show {
+            transform: translateX(0);
+        }
+        .chat-detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+        }
+        .chat-detail-overlay.show {
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- 聊天头部 -->
         <header class="chat-header">
             <button class="chat-back-btn" onclick="Chat.back()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -17,7 +188,7 @@
             </button>
             <div class="chat-title" id="chat-title">聊天</div>
             <div class="chat-actions">
-                <button class="chat-back-btn" onclick="Chat.showMenu()">
+                <button class="chat-back-btn" onclick="Chat.showDetail()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="1"></circle>
                         <circle cx="19" cy="12" r="1"></circle>
@@ -27,12 +198,9 @@
             </div>
         </header>
         
-        <!-- 消息列表 -->
         <div class="chat-messages" id="chat-messages">
-            <!-- 消息将通过JS动态添加 -->
         </div>
         
-        <!-- 输入框 -->
         <div class="chat-input-bar">
             <div class="chat-input-actions">
                 <button class="chat-input-btn" onclick="Chat.toggleStickerPanel()" title="表情">
@@ -58,15 +226,72 @@
             <button class="chat-send-btn" id="send-btn" onclick="Chat.sendMessage()">发送</button>
         </div>
         
-        <!-- 表情面板 -->
         <div id="sticker-panel" class="sticker-panel" style="display: none;">
             <div class="sticker-grid" id="sticker-grid">
-                <!-- 表情将动态生成 -->
             </div>
         </div>
     </div>
     
-    <!-- 图片预览 -->
+    <div id="message-overlay" class="message-overlay" style="display: none;" onclick="Chat.hideMessageMenu()"></div>
+    <div id="message-menu" class="message-actions-menu" style="display: none;">
+    </div>
+    
+    <div id="chat-detail-overlay" class="chat-detail-overlay" onclick="Chat.hideDetail()"></div>
+    <div id="chat-detail-modal" class="chat-detail-modal">
+        <header class="app-header" style="border-bottom: 1px solid var(--border-color);">
+            <button class="chat-back-btn" onclick="Chat.hideDetail()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <h1>聊天详情</h1>
+            <div style="width: 40px;"></div>
+        </header>
+        
+        <div style="padding: 16px; padding-bottom: 30px;">
+            <div id="group-members-section" style="display: none;">
+                <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">群成员</div>
+                <div id="group-members-list" class="group-member-list" style="background: var(--bg-secondary); border-radius: var(--radius-md); overflow: hidden;">
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">群公告</div>
+                    <textarea id="group-announcement-input" class="form-input" style="height: 80px; resize: none; display: none;" placeholder="点击编辑群公告"></textarea>
+                    <div id="group-announcement-display" style="background: var(--bg-secondary); border-radius: var(--radius-md); padding: 12px; font-size: 14px; color: var(--text-secondary);">
+                        暂无群公告
+                    </div>
+                    <button id="edit-announcement-btn" class="btn btn-primary btn-block" style="margin-top: 12px; display: none;" onclick="Chat.saveAnnouncement()">保存公告</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <div class="settings-item" style="border-radius: var(--radius-md); overflow: hidden;">
+                    <div class="settings-label">
+                        <div class="settings-text">消息免打扰</div>
+                    </div>
+                    <div class="toggle-switch" id="mute-toggle" onclick="Chat.toggleMute()"></div>
+                </div>
+            </div>
+            
+            <div id="group-actions-section" style="display: none; margin-top: 20px;">
+                <button class="btn btn-outline btn-block" onclick="Chat.quitGroup()">退出群聊</button>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <div class="settings-item" style="border-radius: var(--radius-md); overflow: hidden; cursor: pointer;" onclick="Chat.showDeleteConfirm()">
+                    <div class="settings-label">
+                        <div class="settings-text" style="color: var(--danger-color);">删除聊天记录</div>
+                    </div>
+                    <div class="settings-value">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div id="image-preview" class="image-preview" style="display: none;" onclick="this.style.display='none'">
         <button class="image-preview-close" onclick="document.getElementById('image-preview').style.display='none'">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -80,7 +305,6 @@
     <script>
         const API_BASE = '/api/index.php';
         
-        // 常用表情
         const STICKERS = [
             '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊',
             '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘',
@@ -106,13 +330,15 @@
             targetId: null,
             targetNickname: '',
             targetAvatar: '',
+            chatType: 1,
             conversationId: null,
             currentUser: null,
             lastMsgId: 0,
             pollTimer: null,
             stickersInitialized: false,
+            currentMenuMsgId: null,
+            groupInfo: null,
             
-            // 解析endpoint为查询参数
             parseEndpoint(endpoint) {
                 let path = endpoint.split('?')[0];
                 path = path.replace(/^\//, '');
@@ -123,7 +349,6 @@
                 };
             },
             
-            // 从endpoint中提取查询字符串
             getQueryString(endpoint) {
                 const qIndex = endpoint.indexOf('?');
                 if (qIndex !== -1) {
@@ -133,14 +358,12 @@
             },
             
             async init() {
-                // 检查登录状态
                 const loggedIn = await this.checkLogin();
                 if (!loggedIn) {
                     window.location.href = 'auth.html';
                     return;
                 }
                 
-                // 获取聊天目标信息
                 const targetData = sessionStorage.getItem('chat_target');
                 if (!targetData) {
                     window.location.href = 'index.html';
@@ -151,24 +374,20 @@
                 this.targetId = target.id;
                 this.targetNickname = target.nickname;
                 this.targetAvatar = target.avatar;
+                this.chatType = target.chatType || 1;
                 
-                // 设置标题
                 document.getElementById('chat-title').textContent = this.targetNickname;
                 
-                // 初始化表情面板
+                if (this.chatType === 2) {
+                    await this.loadGroupInfo();
+                }
+                
                 this.initStickers();
-                
-                // 绑定事件
                 this.bindEvents();
-                
-                // 加载消息
                 await this.loadMessages();
-                
-                // 开始轮询
                 this.startPolling();
             },
             
-            // 检查登录状态
             async checkLogin() {
                 try {
                     const res = await this.api('/auth/check_login');
@@ -182,7 +401,6 @@
                 return false;
             },
             
-            // API请求
             async api(endpoint, method = 'GET', data = null) {
                 const { module, action } = this.parseEndpoint(endpoint);
                 const queryString = this.getQueryString(endpoint);
@@ -209,7 +427,6 @@
                 }
             },
             
-            // 显示Toast
             toast(message, duration = 2000) {
                 const existingToast = document.querySelector('.toast');
                 if (existingToast) {
@@ -226,7 +443,6 @@
                 }, duration);
             },
             
-            // 初始化表情
             initStickers() {
                 if (this.stickersInitialized) return;
                 
@@ -238,21 +454,16 @@
                 this.stickersInitialized = true;
             },
             
-            // 绑定事件
             bindEvents() {
                 const input = document.getElementById('message-input');
                 const sendBtn = document.getElementById('send-btn');
                 
-                // 输入框自动高度
                 input.addEventListener('input', () => {
                     input.style.height = 'auto';
                     input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-                    
-                    // 检查是否有内容
                     sendBtn.style.opacity = input.value.trim() ? '1' : '0.5';
                 });
                 
-                // Enter发送
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -260,7 +471,6 @@
                     }
                 });
                 
-                // 点击空白处隐藏表情面板
                 document.addEventListener('click', (e) => {
                     const panel = document.getElementById('sticker-panel');
                     const emojiBtn = e.target.closest('[onclick*="toggleStickerPanel"]');
@@ -273,22 +483,105 @@
                 });
             },
             
-            // 切换表情面板
             toggleStickerPanel() {
                 const panel = document.getElementById('sticker-panel');
                 this.stickerPanelVisible = !this.stickerPanelVisible;
                 panel.style.display = this.stickerPanelVisible ? 'block' : 'none';
             },
             
-            // 加载消息
+            async loadGroupInfo() {
+                try {
+                    const res = await this.api(`/group/detail?group_id=${this.targetId}`);
+                    if (res.success) {
+                        this.groupInfo = res.data;
+                        this.updateGroupDetail();
+                    }
+                } catch (e) {
+                    console.error('加载群组信息失败:', e);
+                }
+            },
+            
+            updateGroupDetail() {
+                const groupSection = document.getElementById('group-members-section');
+                const groupActions = document.getElementById('group-actions-section');
+                
+                groupSection.style.display = 'block';
+                groupActions.style.display = 'block';
+                
+                const membersList = document.getElementById('group-members-list');
+                membersList.innerHTML = '';
+                
+                if (this.groupInfo.members) {
+                    this.groupInfo.members.forEach(member => {
+                        const isCreator = member.role === 1;
+                        const isAdmin = member.role === 2;
+                        const roleText = isCreator ? '群主' : (isAdmin ? '管理员' : '');
+                        
+                        const displayName = member.nickname_in_group || member.nickname || member.user_number;
+                        const avatarHtml = member.avatar ? 
+                            `<img src="${member.avatar}" alt="${displayName}">` :
+                            `<span style="color: var(--text-muted); font-size: 16px;">${displayName[0].toUpperCase()}</span>`;
+                        
+                        const html = `
+                            <div class="group-member-item">
+                                <div class="group-member-avatar">${avatarHtml}</div>
+                                <div class="group-member-info">
+                                    <div class="group-member-name">${this.escapeHtml(displayName)}</div>
+                                    ${roleText ? `<div class="group-member-role">${roleText}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                        membersList.insertAdjacentHTML('beforeend', html);
+                    });
+                }
+                
+                const announcement = this.groupInfo.group_announcement || '';
+                const announcementDisplay = document.getElementById('group-announcement-display');
+                const announcementInput = document.getElementById('group-announcement-input');
+                const editBtn = document.getElementById('edit-announcement-btn');
+                
+                const isCreator = this.groupInfo.members?.find(m => m.user_id === this.currentUser.id)?.role === 1;
+                
+                if (announcement) {
+                    announcementDisplay.textContent = announcement;
+                    announcementInput.value = announcement;
+                } else {
+                    announcementDisplay.textContent = '暂无群公告';
+                }
+                
+                if (isCreator) {
+                    announcementInput.style.display = 'block';
+                    announcementDisplay.style.display = 'none';
+                    editBtn.style.display = 'block';
+                    
+                    if (announcement) {
+                        announcementInput.value = announcement;
+                    }
+                } else {
+                    announcementInput.style.display = 'none';
+                    announcementDisplay.style.display = 'block';
+                    editBtn.style.display = 'none';
+                }
+            },
+            
+            escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+            
             async loadMessages() {
                 try {
-                    const res = await this.api(`/message/list?target_id=${this.targetId}`);
+                    let url = `/message/list?target_id=${this.targetId}`;
+                    if (this.chatType === 2) {
+                        url = `/message/list?target_id=${this.targetId}&chat_type=2`;
+                    }
+                    const res = await this.api(url);
                     if (res.success) {
                         this.conversationId = res.data.conversation_id;
                         this.renderMessages(res.data.messages, true);
                         
-                        // 更新lastMsgId
                         if (res.data.messages.length > 0) {
                             this.lastMsgId = Math.max(...res.data.messages.map(m => m.id));
                         }
@@ -298,7 +591,6 @@
                 }
             },
             
-            // 渲染消息
             renderMessages(messages, clearFirst = false) {
                 const container = document.getElementById('chat-messages');
                 
@@ -317,7 +609,6 @@
                     return;
                 }
                 
-                // 移除空状态提示
                 const emptyState = container.querySelector('.empty-state');
                 if (emptyState) emptyState.remove();
                 
@@ -327,13 +618,11 @@
                     container.insertAdjacentHTML('beforeend', msgHtml);
                 });
                 
-                // 滚动到底部
                 setTimeout(() => {
                     container.scrollTop = container.scrollHeight;
                 }, 100);
             },
             
-            // 渲染单条消息
             renderMessage(msg, isSelf) {
                 const time = new Date(msg.created_at).toLocaleTimeString('zh-CN', {
                     hour: '2-digit',
@@ -346,19 +635,18 @@
                     contentHtml = `<div class="message-text" style="color: var(--text-muted); font-style: italic;">该消息已焚毁</div>`;
                 } else {
                     switch (msg.msg_type) {
-                        case 1: // 文字
-                            contentHtml = `<div class="message-text">${msg.content}</div>`;
+                        case 1:
+                            contentHtml = `<div class="message-text">${this.escapeHtml(msg.content)}</div>`;
                             break;
-                        case 2: // 图片
+                        case 2:
                             contentHtml = `<img class="message-image" src="${msg.content}" onclick="Chat.previewImage('${msg.content}')" alt="图片">`;
                             break;
-                        case 3: // 表情
+                        case 3:
                             contentHtml = `<div class="message-sticker">${msg.content}</div>`;
                             break;
                     }
                 }
                 
-                // 阅后即焚标记
                 let burnBadge = '';
                 if (!msg.is_burned && msg.burn_time) {
                     burnBadge = `<span class="burned-badge">
@@ -369,30 +657,259 @@
                     </span>`;
                 }
                 
-                const avatar = isSelf ? (this.currentUser.avatar || '') : this.targetAvatar;
+                let favoriteBadge = '';
+                if (msg.is_favorited) {
+                    favoriteBadge = `<div class="favorite-badge">
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 10px; height: 10px; display: inline-block; margin-right: 2px;">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        已收藏
+                    </div>`;
+                }
+                
+                const avatar = isSelf ? (this.currentUser.avatar || '') : 
+                    (this.chatType === 2 ? (msg.sender_avatar || '') : this.targetAvatar);
                 const avatarHtml = avatar ? 
                     `<img src="${avatar}" class="avatar small" alt="头像">` :
                     `<div class="avatar small"><div class="avatar-placeholder">${isSelf ? (this.currentUser.nickname || '我')[0].toUpperCase() : (this.targetNickname || '用')[0].toUpperCase()}</div></div>`;
                 
+                let senderNameHtml = '';
+                if (this.chatType === 2 && !isSelf && msg.sender_nickname) {
+                    senderNameHtml = `<div class="message-sender-name">${this.escapeHtml(msg.sender_nickname || msg.sender_id)}</div>`;
+                }
+                
                 return `
-                    <div class="message-item ${isSelf ? 'self' : ''}" data-msg-id="${msg.id}">
+                    <div class="message-item ${isSelf ? 'message-self' : ''}" 
+                         data-msg-id="${msg.id}" 
+                         data-is-favorited="${msg.is_favorited || 0}"
+                         data-is-burned="${msg.is_burned || 0}"
+                         oncontextmenu="Chat.showMessageMenu(event, ${msg.id}, ${msg.is_favorited || 0}, ${msg.is_burned || 0}); return false;"
+                         ontouchstart="Chat.handleTouchStart(event, ${msg.id}, ${msg.is_favorited || 0}, ${msg.is_burned || 0})">
                         <div class="message-avatar">${avatarHtml}</div>
                         <div class="message-content">
-                            <div class="message-bubble">${contentHtml}</div>
+                            ${senderNameHtml}
+                            <div class="message-bubble" style="position: relative;">
+                                ${contentHtml}
+                                ${favoriteBadge}
+                            </div>
                             <div class="message-time">${time}${burnBadge}</div>
                         </div>
                     </div>
                 `;
             },
             
-            // 发送文字消息
+            handleTouchStart(event, msgId, isFavorited, isBurned) {
+                this.touchStartTime = Date.now();
+                this.touchStartX = event.touches[0].clientX;
+                this.touchStartY = event.touches[0].clientY;
+                this.touchMsgId = msgId;
+                this.touchIsFavorited = isFavorited;
+                this.touchIsBurned = isBurned;
+                
+                event.target.addEventListener('touchend', this.handleTouchEnd.bind(this), { once: true });
+            },
+            
+            handleTouchEnd(event) {
+                if (!this.touchStartTime) return;
+                
+                const touchDuration = Date.now() - this.touchStartTime;
+                const touch = event.changedTouches[0];
+                const moveX = Math.abs(touch.clientX - this.touchStartX);
+                const moveY = Math.abs(touch.clientY - this.touchStartY);
+                
+                if (touchDuration > 500 && moveX < 10 && moveY < 10) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.showMessageMenu({
+                        clientX: this.touchStartX,
+                        clientY: this.touchStartY
+                    }, this.touchMsgId, this.touchIsFavorited, this.touchIsBurned);
+                }
+                
+                this.touchStartTime = null;
+            },
+            
+            showMessageMenu(event, msgId, isFavorited, isBurned) {
+                this.currentMenuMsgId = msgId;
+                
+                const menu = document.getElementById('message-menu');
+                const overlay = document.getElementById('message-overlay');
+                
+                let menuItems = [];
+                
+                if (!isBurned) {
+                    if (isFavorited) {
+                        menuItems.push({
+                            id: 'unfavorite',
+                            label: '取消收藏',
+                            icon: '💔',
+                            danger: false
+                        });
+                    } else {
+                        menuItems.push({
+                            id: 'favorite',
+                            label: '收藏',
+                            icon: '❤️',
+                            danger: false
+                        });
+                    }
+                }
+                
+                menuItems.push({
+                    id: 'forward',
+                    label: '转发',
+                    icon: '↗️',
+                    danger: false
+                });
+                
+                menuItems.push({
+                    id: 'delete',
+                    label: '删除',
+                    icon: '🗑️',
+                    danger: true
+                });
+                
+                menu.innerHTML = menuItems.map(item => `
+                    <div class="message-action-item ${item.danger ? 'danger' : ''}" onclick="Chat.handleMenuAction('${item.id}')">
+                        <span>${item.icon}</span>
+                        <span>${item.label}</span>
+                    </div>
+                `).join('');
+                
+                const rect = event.target.getBoundingClientRect();
+                let x = event.clientX || rect.left;
+                let y = event.clientY || rect.top;
+                
+                const menuWidth = 140;
+                const menuHeight = menuItems.length * 48;
+                
+                if (x + menuWidth > window.innerWidth - 20) {
+                    x = window.innerWidth - menuWidth - 20;
+                }
+                if (x < 20) x = 20;
+                
+                if (y + menuHeight + 10 > window.innerHeight) {
+                    y = y - menuHeight - 10;
+                } else {
+                    y = y + 20;
+                }
+                
+                menu.style.left = x + 'px';
+                menu.style.top = y + 'px';
+                menu.style.display = 'block';
+                overlay.style.display = 'block';
+            },
+            
+            hideMessageMenu() {
+                const menu = document.getElementById('message-menu');
+                const overlay = document.getElementById('message-overlay');
+                menu.style.display = 'none';
+                overlay.style.display = 'none';
+                this.currentMenuMsgId = null;
+            },
+            
+            async handleMenuAction(action) {
+                this.hideMessageMenu();
+                
+                if (!this.currentMenuMsgId) return;
+                
+                switch (action) {
+                    case 'favorite':
+                        await this.addFavorite(this.currentMenuMsgId);
+                        break;
+                    case 'unfavorite':
+                        await this.removeFavorite(this.currentMenuMsgId);
+                        break;
+                    case 'delete':
+                        if (confirm('确定要删除这条消息吗？')) {
+                            await this.deleteMessage(this.currentMenuMsgId);
+                        }
+                        break;
+                    case 'forward':
+                        this.toast('转发功能开发中');
+                        break;
+                }
+            },
+            
+            async addFavorite(msgId) {
+                try {
+                    const res = await this.api('/favorite/add', 'POST', { msg_id: msgId });
+                    if (res.success) {
+                        this.toast('已收藏');
+                        this.updateMessageFavorite(msgId, true);
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('收藏失败');
+                }
+            },
+            
+            async removeFavorite(msgId) {
+                try {
+                    const res = await this.api('/favorite/remove_by_msg', 'POST', { msg_id: msgId });
+                    if (res.success) {
+                        this.toast('已取消收藏');
+                        this.updateMessageFavorite(msgId, false);
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('操作失败');
+                }
+            },
+            
+            updateMessageFavorite(msgId, isFavorited) {
+                const msgEl = document.querySelector(`.message-item[data-msg-id="${msgId}"]`);
+                if (msgEl) {
+                    msgEl.setAttribute('data-is-favorited', isFavorited ? '1' : '0');
+                    
+                    const bubble = msgEl.querySelector('.message-bubble');
+                    const existingBadge = bubble.querySelector('.favorite-badge');
+                    
+                    if (isFavorited) {
+                        if (!existingBadge) {
+                            const badgeHtml = `<div class="favorite-badge">
+                                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 10px; height: 10px; display: inline-block; margin-right: 2px;">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                                已收藏
+                            </div>`;
+                            bubble.insertAdjacentHTML('beforeend', badgeHtml);
+                        }
+                    } else {
+                        if (existingBadge) {
+                            existingBadge.remove();
+                        }
+                    }
+                }
+            },
+            
+            async deleteMessage(msgId) {
+                try {
+                    const res = await this.api('/message/delete', 'POST', { msg_id: msgId });
+                    if (res.success) {
+                        const msgEl = document.querySelector(`.message-item[data-msg-id="${msgId}"]`);
+                        if (msgEl) {
+                            msgEl.style.transition = 'opacity 0.3s';
+                            msgEl.style.opacity = '0';
+                            setTimeout(() => msgEl.remove(), 300);
+                        }
+                        this.toast('已删除');
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('删除失败');
+                }
+            },
+            
             async sendMessage() {
                 const input = document.getElementById('message-input');
                 const content = input.value.trim();
                 
                 if (!content) return;
                 
-                // 清空输入
                 input.value = '';
                 input.style.height = 'auto';
                 document.getElementById('send-btn').style.opacity = '0.5';
@@ -401,11 +918,11 @@
                     const res = await this.api('/message/send', 'POST', {
                         target_id: this.targetId,
                         msg_type: 1,
-                        content: content
+                        content: content,
+                        chat_type: this.chatType
                     });
                     
                     if (res.success) {
-                        // 渲染自己的消息
                         this.renderMessages([res.data], false);
                         this.lastMsgId = Math.max(this.lastMsgId, res.data.id);
                     } else {
@@ -416,9 +933,7 @@
                 }
             },
             
-            // 发送表情
             async sendSticker(sticker) {
-                // 隐藏表情面板
                 document.getElementById('sticker-panel').style.display = 'none';
                 this.stickerPanelVisible = false;
                 
@@ -426,7 +941,8 @@
                     const res = await this.api('/message/send', 'POST', {
                         target_id: this.targetId,
                         msg_type: 3,
-                        content: sticker
+                        content: sticker,
+                        chat_type: this.chatType
                     });
                     
                     if (res.success) {
@@ -440,20 +956,17 @@
                 }
             },
             
-            // 上传图片
             async uploadImage(input) {
                 if (!input.files || !input.files[0]) return;
                 
                 const file = input.files[0];
                 input.value = '';
                 
-                // 检查文件大小
                 if (file.size > 5 * 1024 * 1024) {
                     this.toast('图片大小不能超过5MB');
                     return;
                 }
                 
-                // 检查文件类型
                 if (!file.type.startsWith('image/')) {
                     this.toast('请选择图片文件');
                     return;
@@ -464,7 +977,6 @@
                     formData.append('image', file);
                     
                     const uploadUrl = API_BASE + '?module=message&action=upload_image';
-                    console.log('上传图片到:', uploadUrl, '文件大小:', file.size);
                     
                     const response = await fetch(uploadUrl, {
                         method: 'POST',
@@ -472,24 +984,19 @@
                         body: formData
                     });
                     
-                    console.log('上传响应状态:', response.status);
-                    
                     if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('上传错误响应:', errorText);
                         this.toast('上传失败: HTTP ' + response.status);
                         return;
                     }
                     
                     const res = await response.json();
-                    console.log('上传响应:', res);
                     
                     if (res.success) {
-                        // 发送图片消息
                         const sendRes = await this.api('/message/send', 'POST', {
                             target_id: this.targetId,
                             msg_type: 2,
-                            content: res.data.url
+                            content: res.data.url,
+                            chat_type: this.chatType
                         });
                         
                         if (sendRes.success) {
@@ -507,7 +1014,6 @@
                 }
             },
             
-            // 预览图片
             previewImage(url) {
                 const preview = document.getElementById('image-preview');
                 const img = document.getElementById('preview-image');
@@ -515,14 +1021,12 @@
                 preview.style.display = 'flex';
             },
             
-            // 开始轮询
             startPolling() {
                 this.pollTimer = setInterval(() => {
                     this.pollNewMessages();
-                }, 3000); // 每3秒轮询
+                }, 3000);
             },
             
-            // 停止轮询
             stopPolling() {
                 if (this.pollTimer) {
                     clearInterval(this.pollTimer);
@@ -530,23 +1034,23 @@
                 }
             },
             
-            // 轮询新消息
             async pollNewMessages() {
                 try {
-                    const res = await this.api(`/message/list?target_id=${this.targetId}`);
+                    let url = `/message/list?target_id=${this.targetId}`;
+                    if (this.chatType === 2) {
+                        url = `/message/list?target_id=${this.targetId}&chat_type=2`;
+                    }
+                    const res = await this.api(url);
                     if (res.success && res.data.messages.length > 0) {
-                        // 找出新消息
                         const newMessages = res.data.messages.filter(m => m.id > this.lastMsgId);
                         
                         if (newMessages.length > 0) {
-                            // 标记已读并设置焚毁时间
                             newMessages.forEach(msg => {
                                 if (msg.sender_id !== this.currentUser.id && !msg.is_read && !msg.is_burned) {
                                     this.api('/message/mark_read', 'POST', { msg_id: msg.id });
                                 }
                             });
                             
-                            // 渲染新消息
                             this.renderMessages(newMessages, false);
                             this.lastMsgId = Math.max(...res.data.messages.map(m => m.id));
                         }
@@ -556,24 +1060,66 @@
                 }
             },
             
-            // 显示菜单
-            showMenu() {
-                // 简单实现：删除会话
-                if (confirm('确定要删除此会话吗？')) {
-                    this.deleteConversation();
-                }
+            showDetail() {
+                const modal = document.getElementById('chat-detail-modal');
+                const overlay = document.getElementById('chat-detail-overlay');
+                modal.classList.add('show');
+                overlay.classList.add('show');
             },
             
-            // 删除会话
-            async deleteConversation() {
+            hideDetail() {
+                const modal = document.getElementById('chat-detail-modal');
+                const overlay = document.getElementById('chat-detail-overlay');
+                modal.classList.remove('show');
+                overlay.classList.remove('show');
+            },
+            
+            toggleMute() {
+                const toggle = document.getElementById('mute-toggle');
+                toggle.classList.toggle('active');
+                this.toast(toggle.classList.contains('active') ? '已开启消息免打扰' : '已关闭消息免打扰');
+            },
+            
+            async saveAnnouncement() {
+                if (this.chatType !== 2) return;
+                
+                const input = document.getElementById('group-announcement-input');
+                const announcement = input.value.trim();
+                
                 try {
-                    const res = await this.api('/conversation/delete', 'POST', {
-                        conversation_id: this.conversationId
+                    const res = await this.api('/group/update', 'POST', {
+                        group_id: this.targetId,
+                        group_announcement: announcement
                     });
                     
                     if (res.success) {
-                        this.toast('会话已删除');
-                        this.back();
+                        this.toast('公告已保存');
+                        if (this.groupInfo) {
+                            this.groupInfo.group_announcement = announcement;
+                        }
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('保存失败');
+                }
+            },
+            
+            async quitGroup() {
+                if (this.chatType !== 2) return;
+                
+                if (!confirm('确定要退出群聊吗？')) return;
+                
+                try {
+                    const res = await this.api('/group/quit', 'POST', {
+                        group_id: this.targetId
+                    });
+                    
+                    if (res.success) {
+                        this.toast('已退出群聊');
+                        setTimeout(() => {
+                            this.back();
+                        }, 1000);
                     } else {
                         this.toast(res.message);
                     }
@@ -582,7 +1128,33 @@
                 }
             },
             
-            // 返回
+            showDeleteConfirm() {
+                if (!confirm('确定要清空此聊天的所有记录吗？此操作不可恢复。')) return;
+                this.clearMessages();
+            },
+            
+            async clearMessages() {
+                try {
+                    const res = await this.api('/conversation/delete', 'POST', {
+                        conversation_id: this.conversationId
+                    });
+                    
+                    if (res.success) {
+                        this.toast('聊天记录已清空');
+                        const container = document.getElementById('chat-messages');
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <p>暂无消息</p>
+                            </div>
+                        `;
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('操作失败');
+                }
+            },
+            
             back() {
                 this.stopPolling();
                 window.location.href = 'index.html';
