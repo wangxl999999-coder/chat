@@ -776,9 +776,19 @@
                     </div>
                 `).join('');
                 
-                const rect = event.target.getBoundingClientRect();
-                let x = event.clientX || rect.left;
-                let y = event.clientY || rect.top;
+                let x = event.clientX;
+                let y = event.clientY;
+                
+                if (x === undefined && event.target) {
+                    const rect = event.target.getBoundingClientRect();
+                    x = rect.left;
+                    y = rect.top;
+                }
+                
+                if (x === undefined) {
+                    x = 100;
+                    y = 200;
+                }
                 
                 const menuWidth = 140;
                 const menuHeight = menuItems.length * 48;
