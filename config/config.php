@@ -1,9 +1,19 @@
 <?php
 // 基础配置
 define('SITE_NAME', '阅后即焚');
-define('SITE_URL', 'http://biaozhu.com');
+
+// 动态获取当前访问的URL
+function getCurrentBaseUrl() {
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+    $scriptName = isset($_SERVER['SCRIPT_NAME']) ? dirname(dirname($_SERVER['SCRIPT_NAME'])) : '';
+    $scriptName = rtrim($scriptName, '/');
+    return $protocol . '://' . $host . $scriptName;
+}
+
+define('SITE_URL', getCurrentBaseUrl());
 define('UPLOAD_PATH', dirname(__DIR__) . '/uploads/');
-define('UPLOAD_URL', SITE_URL . '/uploads/');
+define('UPLOAD_URL', rtrim(SITE_URL, '/') . '/uploads/');
 
 // 会话配置
 define('SESSION_LIFETIME', 86400 * 7); // 7天
