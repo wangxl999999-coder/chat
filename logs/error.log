@@ -10,3 +10,9 @@
 [01-May-2026 00:00:12 Asia/Shanghai] PHP Notice:  Undefined variable: action in D:\my\tare-git\chat\api\admin.php on line 288
 [01-May-2026 00:00:12 Asia/Shanghai] PHP Notice:  Undefined variable: action in D:\my\tare-git\chat\api\admin.php on line 303
 [01-May-2026 00:00:12 Asia/Shanghai] PHP Notice:  Undefined variable: action in D:\my\tare-git\chat\api\admin.php on line 352
+[01-May-2026 09:43:18 Asia/Shanghai] PHP Warning:  require_once(admin.php): failed to open stream: No such file or directory in D:\my\tare-git\chat\api\index.php on line 83
+[01-May-2026 09:43:18 Asia/Shanghai] PHP Fatal error:  require_once(): Failed opening required 'admin.php' (include_path='.;C:\php\pear') in D:\my\tare-git\chat\api\index.php on line 83
+[01-May-2026 09:43:24 Asia/Shanghai] PHP Warning:  require_once(admin.php): failed to open stream: No such file or directory in D:\my\tare-git\chat\api\index.php on line 83
+[01-May-2026 09:43:24 Asia/Shanghai] PHP Fatal error:  require_once(): Failed opening required 'admin.php' (include_path='.;C:\php\pear') in D:\my\tare-git\chat\api\index.php on line 83
+[01-May-2026 09:44:44 Asia/Shanghai] PHP Warning:  require_once(admin.php): failed to open stream: No such file or directory in D:\my\tare-git\chat\api\index.php on line 83
+[01-May-2026 09:44:44 Asia/Shanghai] PHP Fatal error:  require_once(): Failed opening required 'admin.php' (include_path='.;C:\php\pear') in D:\my\tare-git\chat\api\index.php on line 83
