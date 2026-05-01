@@ -383,12 +383,13 @@
             
             renderFriendItem(friend) {
                 const displayName = friend.remark_name || friend.nickname || '用户';
+                const userId = friend.friend_id;
                 const avatarHtml = friend.avatar ? 
                     `<img src="${friend.avatar}" alt="${displayName}">` :
                     `<div class="friend-avatar-initials">${displayName[0].toUpperCase()}</div>`;
                 
                 return `
-                    <div class="friend-item" data-user-id="${friend.id}" data-nickname="${displayName}" onclick="CreateGroup.toggleFriend(this, ${friend.id}, '${displayName.replace(/'/g, "\\'")}')">
+                    <div class="friend-item" data-user-id="${userId}" data-nickname="${displayName}" onclick="CreateGroup.toggleFriend(this, ${userId}, '${displayName.replace(/'/g, "\\'")}')">
                         <div class="friend-checkbox">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -447,7 +448,7 @@
                 container.innerHTML = '';
                 
                 this.selectedIds.forEach(userId => {
-                    const friend = this.friends.find(f => f.id === userId);
+                    const friend = this.friends.find(f => f.friend_id === userId);
                     if (!friend) return;
                     
                     const displayName = friend.remark_name || friend.nickname || '用户';

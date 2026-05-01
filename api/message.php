@@ -42,6 +42,15 @@ function getBurnDelay($userId) {
 
 switch ($action) {
     case 'list':
+        // 先执行焚毁检查，处理过期消息
+        $stmt = $pdo->exec("
+            UPDATE messages 
+            SET is_burned = 1, content = '该消息已焚毁'
+            WHERE burn_time IS NOT NULL 
+              AND burn_time <= NOW() 
+              AND (is_burned = 0 OR is_burned IS NULL)
+        ");
+        
         // 获取消息列表
         $targetId = intval($_GET['target_id'] ?? 0);
         $lastMsgId = intval($_GET['last_msg_id'] ?? 0);
