@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>朋友圈</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* 朋友圈专属样式 */
+        .moments-header {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            color: white;
+            padding: 20px 16px;
+            display: flex;
+            align-items: flex-end;
+            min-height: 180px;
+            position: relative;
+        }
+        
+        .moments-header .user-info {
+            display: flex;
+            align-items: flex-end;
+            margin-left: auto;
+        }
+        
+        .moments-header .nickname {
+            font-size: 18px;
+            font-weight: 600;
+            margin-right: 12px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .moments-header .avatar {
+            width: 64px;
+            height: 64px;
+            border: 3px solid rgba(255,255,255,0.8);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .moments-header .back-btn {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.2);
+            border-radius: var(--radius-full);
+            color: white;
+        }
+        
+        .moments-header .publish-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.2);
+            border-radius: var(--radius-full);
+            color: white;
+        }
+        
+        .moment-item {
+            background-color: var(--bg-primary);
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .moment-item:last-child {
+            border-bottom: none;
+        }
+        
+        .moment-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .moment-header .avatar {
+            width: 48px;
+            height: 48px;
+            margin-right: 12px;
+        }
+        
+        .moment-header .info {
+            flex: 1;
+        }
+        
+        .moment-header .nickname {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        
+        .moment-header .time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .moment-header .private-badge {
+            font-size: 11px;
+            color: var(--text-muted);
+            background-color: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            margin-left: 8px;
+        }
+        
+        .moment-content {
+            margin-bottom: 12px;
+        }
+        
+        .moment-content .text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .moment-images {
+            display: grid;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .moment-images.single {
+            grid-template-columns: 1fr;
+        }
+        
+        .moment-images.double {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .moment-images.grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .moment-images .moment-image {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            background-color: var(--bg-tertiary);
+        }
+        
+        .moment-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--bg-secondary);
+            font-size: 13px;
+        }
+        
+        .moment-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .moment-action-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        .moment-action-btn.liked {
+            color: var(--primary-color);
+        }
+        
+        .moment-action-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .moment-likes {
+            background-color: var(--bg-secondary);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .moment-likes .like-names {
+            display: inline;
+        }
+        
+        .moment-comments {
+            margin-top: 12px;
+        }
+        
+        .comment-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+        
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+        
+        .comment-item .comment-avatar {
+            width: 32px;
+            height: 32px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        
+        .comment-item .comment-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .comment-item .comment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        
+        .comment-item .comment-nickname {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .comment-item .comment-reply-to {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        .comment-item .comment-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .comment-item .comment-text {
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        
+        .comment-item .comment-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        
+        .comment-item .comment-reply-btn {
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        
+        .comment-item .comment-delete-btn {
+            font-size: 12px;
+            color: var(--danger-color);
+            cursor: pointer;
+        }
+        
+        /* 发布朋友圈弹窗 */
+        .publish-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-primary);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .publish-modal.active {
+            display: flex;
+        }
+        
+        .publish-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .publish-header button {
+            font-size: 15px;
+            padding: 8px 16px;
+        }
+        
+        .publish-header .cancel-btn {
+            color: var(--text-secondary);
+        }
+        
+        .publish-header .submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: var(--radius-full);
+        }
+        
+        .publish-header .submit-btn:disabled {
+            opacity: 0.5;
+        }
+        
+        .publish-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        
+        .publish-textarea {
+            width: 100%;
+            min-height: 150px;
+            font-size: 16px;
+            line-height: 1.6;
+            border: none;
+            resize: none;
+            outline: none;
+            background: none;
+        }
+        
+        .publish-images {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .publish-image-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background-color: var(--bg-tertiary);
+        }
+        
+        .publish-image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .publish-image-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .publish-image-add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .publish-image-add:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .publish-image-add svg {
+            width: 32px;
+            height: 32px;
+            color: var(--text-muted);
+        }
+        
+        .publish-image-add input {
+            display: none;
+        }
+        
+        .publish-options {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .publish-option-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+        }
+        
+        .publish-option-item .label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+        
+        .publish-option-item .label svg {
+            width: 20px;
+            height: 20px;
+            color: var(--text-secondary);
+        }
+        
+        /* 开关按钮 */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 28px;
+        }
+        
+        .toggle-switch input {
+            display: none;
+        }
+        
+        .toggle-switch .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-tertiary);
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+        
+        .toggle-switch .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        .toggle-switch input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
+        /* 评论输入框 */
+        .comment-input-bar {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 768px;
+            margin: 0 auto;
+            z-index: 100;
+        }
+        
+        .comment-input-bar input {
+            flex: 1;
+            height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-full);
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .comment-input-bar input:focus {
+            border-color: var(--primary-color);
+        }
+        
+        .comment-input-bar .send-btn {
+            margin-left: 12px;
+            padding: 0 16px;
+            height: 36px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: var(--radius-full);
+            font-size: 14px;
+        }
+        
+        .comment-input-bar .send-btn:disabled {
+            opacity: 0.5;
+        }
+        
+        .moments-list {
+            padding-bottom: 60px;
+        }
+        
+        /* 加载更多 */
+        .load-more {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        
+        /* 删除确认 */
+        .moment-menu {
+            position: fixed;
+            background-color: var(--bg-primary);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 300;
+            min-width: 120px;
+            overflow: hidden;
+        }
+        
+        .moment-menu-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .moment-menu-item:hover {
+            background-color: var(--bg-secondary);
+        }
+        
+        .moment-menu-item.danger {
+            color: var(--danger-color);
+        }
+        
+        /* 遮罩层 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 200;
+            display: none;
+        }
+        
+        .modal-overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 朋友圈头部 -->
+        <div class="moments-header">
+            <button class="back-btn" onclick="Moments.back()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <button class="publish-btn" onclick="Moments.showPublish()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <div class="user-info">
+                <div class="nickname" id="moments-nickname">用户</div>
+                <div class="user-avatar" id="moments-avatar"></div>
+            </div>
+        </div>
+        
+        <!-- 朋友圈列表 -->
+        <div class="moments-list" id="moments-list">
+            <div class="empty-state">
+                <div class="loading"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+        
+        <!-- 评论输入框（默认隐藏） -->
+        <div class="comment-input-bar" id="comment-input-bar" style="display: none;">
+            <input type="text" id="comment-input" placeholder="评论">
+            <button class="send-btn" id="comment-send-btn" disabled onclick="Moments.submitComment()">发送</button>
+        </div>
+    </div>
+    
+    <!-- 发布朋友圈弹窗 -->
+    <div class="publish-modal" id="publish-modal">
+        <div class="publish-header">
+            <button class="cancel-btn" onclick="Moments.hidePublish()">取消</button>
+            <span style="font-size: 17px; font-weight: 600;">发朋友圈</span>
+            <button class="submit-btn" id="publish-submit-btn" disabled onclick="Moments.submitPublish()">发表</button>
+        </div>
+        <div class="publish-body">
+            <textarea class="publish-textarea" id="publish-textarea" placeholder="这一刻的想法..."></textarea>
+            <div class="publish-images" id="publish-images">
+                <div class="publish-image-item publish-image-add" onclick="Moments.triggerImageUpload()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <input type="file" id="image-input" accept="image/*" multiple onchange="Moments.handleImageSelect(event)">
+                </div>
+            </div>
+            <div class="publish-options">
+                <div class="publish-option-item">
+                    <div class="label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        设为私有（仅自己可见）
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="publish-private">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 操作菜单遮罩 -->
+    <div class="modal-overlay" id="menu-overlay" onclick="Moments.hideMenu()"></div>
+    
+    <script>
+        const API_BASE = '/api/index.php';
+        
+        const Moments = {
+            currentUser: null,
+            moments: [],
+            page: 1,
+            pageSize: 20,
+            hasMore: true,
+            isLoading: false,
+            currentCommentMomentId: null,
+            currentReplyComment: null,
+            selectedImages: [],
+            
+            async init() {
+                const loggedIn = await this.checkLogin();
+                if (!loggedIn) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+                
+                this.updateHeader();
+                this.bindEvents();
+                await this.loadMoments();
+            },
+            
+            async checkLogin() {
+                try {
+                    const res = await this.api('/auth/check_login');
+                    if (res.success) {
+                        this.currentUser = res.data;
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('检查登录失败:', e);
+                }
+                return false;
+            },
+            
+            parseEndpoint(endpoint) {
+                let path = endpoint.split('?')[0];
+                path = path.replace(/^\//, '');
+                const parts = path.split('/');
+                return {
+                    module: parts[0] || '',
+                    action: parts[1] || ''
+                };
+            },
+            
+            getQueryString(endpoint) {
+                const qIndex = endpoint.indexOf('?');
+                if (qIndex !== -1) {
+                    return '&' + endpoint.substring(qIndex + 1);
+                }
+                return '';
+            },
+            
+            async api(endpoint, method = 'GET', data = null, isFormData = false) {
+                const { module, action } = this.parseEndpoint(endpoint);
+                const queryString = this.getQueryString(endpoint);
+                const url = API_BASE + '?module=' + module + '&action=' + action + queryString;
+                const options = {
+                    method,
+                    credentials: 'include'
+                };
+                
+                if (data && method !== 'GET') {
+                    if (isFormData) {
+                        options.body = data;
+                    } else {
+                        options.headers = {
+                            'Content-Type': 'application/json'
+                        };
+                        options.body = JSON.stringify(data);
+                    }
+                }
+                
+                try {
+                    const response = await fetch(url, options);
+                    const result = await response.json();
+                    return result;
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            toast(message, duration = 2000) {
+                const existingToast = document.querySelector('.toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, duration);
+            },
+            
+            formatTime(timeStr) {
+                if (!timeStr) return '';
+                
+                const time = new Date(timeStr);
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const msgDate = new Date(time.getFullYear(), time.getMonth(), time.getDate());
+                
+                const diffDays = Math.floor((today - msgDate) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 0) {
+                    return time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                } else if (diffDays === 1) {
+                    return '昨天';
+                } else if (diffDays < 7) {
+                    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+                    return weekdays[time.getDay()];
+                } else {
+                    return `${time.getFullYear()}/${time.getMonth() + 1}/${time.getDate()}`;
+                }
+            },
+            
+            updateHeader() {
+                if (!this.currentUser) return;
+                
+                const nicknameEl = document.getElementById('moments-nickname');
+                const avatarEl = document.getElementById('moments-avatar');
+                
+                if (nicknameEl) {
+                    nicknameEl.textContent = this.currentUser.nickname || '用户';
+                }
+                
+                if (avatarEl) {
+                    if (this.currentUser.avatar) {
+                        avatarEl.innerHTML = `<img src="${this.currentUser.avatar}" class="avatar" alt="头像">`;
+                    } else {
+                        avatarEl.innerHTML = `<div class="avatar"><div class="avatar-placeholder">${(this.currentUser.nickname || 'U')[0].toUpperCase()}</div></div>`;
+                    }
+                }
+            },
+            
+            bindEvents() {
+                const commentInput = document.getElementById('comment-input');
+                const sendBtn = document.getElementById('comment-send-btn');
+                const publishTextarea = document.getElementById('publish-textarea');
+                const publishSubmitBtn = document.getElementById('publish-submit-btn');
+                
+                if (commentInput) {
+                    commentInput.addEventListener('input', () => {
+                        sendBtn.disabled = !commentInput.value.trim();
+                    });
+                    commentInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            if (commentInput.value.trim()) {
+                                this.submitComment();
+                            }
+                        }
+                    });
+                }
+                
+                if (publishTextarea) {
+                    publishTextarea.addEventListener('input', () => {
+                        this.checkPublishButton();
+                    });
+                }
+            },
+            
+            checkPublishButton() {
+                const textarea = document.getElementById('publish-textarea');
+                const submitBtn = document.getElementById('publish-submit-btn');
+                const hasText = textarea && textarea.value.trim();
+                const hasImages = this.selectedImages.length > 0;
+                submitBtn.disabled = !hasText && !hasImages;
+            },
+            
+            async loadMoments(refresh = false) {
+                if (this.isLoading) return;
+                if (!this.hasMore && !refresh) return;
+                
+                this.isLoading = true;
+                
+                if (refresh) {
+                    this.page = 1;
+                    this.hasMore = true;
+                }
+                
+                try {
+                    const res = await this.api(`/moments/list?page=${this.page}&page_size=${this.pageSize}`);
+                    
+                    if (res.success) {
+                        if (refresh) {
+                            this.moments = res.data.list;
+                        } else {
+                            this.moments = this.moments.concat(res.data.list);
+                        }
+                        
+                        this.hasMore = this.moments.length < res.data.total;
+                        this.page++;
+                        
+                        this.renderMoments();
+                    } else {
+                        this.showError(res.message);
+                    }
+                } catch (e) {
+                    this.showError('加载失败');
+                }
+                
+                this.isLoading = false;
+            },
+            
+            showError(message) {
+                const container = document.getElementById('moments-list');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>${message}</p>
+                        <button class="btn btn-sm" onclick="Moments.loadMoments(true)" style="margin-top: 16px;">重试</button>
+                    </div>
+                `;
+            },
+            
+            renderMoments() {
+                const container = document.getElementById('moments-list');
+                
+                if (this.moments.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                            </svg>
+                            <h3>暂无朋友圈</h3>
+                            <p>快去发布第一条朋友圈吧</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const momentsHtml = this.moments.map(moment => this.renderMomentItem(moment)).join('');
+                
+                container.innerHTML = momentsHtml + (this.hasMore ? 
+                    `<div class="load-more" onclick="Moments.loadMoments()">加载更多</div>` : '');
+            },
+            
+            renderMomentItem(moment) {
+                const avatar = moment.avatar ? 
+                    `<img src="${moment.avatar}" class="avatar" alt="${moment.nickname}">` :
+                    `<div class="avatar"><div class="avatar-placeholder">${(moment.nickname || 'U')[0].toUpperCase()}</div></div>`;
+                
+                const isOwn = moment.user_id === this.currentUser.id;
+                const isLiked = moment.is_liked > 0;
+                
+                let imagesHtml = '';
+                if (moment.images && moment.images.length > 0) {
+                    const imageCount = moment.images.length;
+                    let gridClass = 'grid';
+                    if (imageCount === 1) gridClass = 'single';
+                    else if (imageCount === 2) gridClass = 'double';
+                    else if (imageCount === 4) gridClass = 'double';
+                    
+                    imagesHtml = `
+                        <div class="moment-images ${gridClass}">
+                            ${moment.images.slice(0, 9).map((img, idx) => `
+                                <img src="${img}" class="moment-image" alt="图片" onclick="Moments.previewImage('${img}')">
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                let likesHtml = '';
+                if (moment.likes && moment.likes.length > 0) {
+                    const likeNames = moment.likes.map(l => l.nickname).join('、');
+                    likesHtml = `
+                        <div class="moment-likes">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; display: inline-block; margin-right: 4px; vertical-align: middle;">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                            <span class="like-names">${likeNames}</span>
+                        </div>
+                    `;
+                }
+                
+                let commentsHtml = '';
+                if (moment.comments && moment.comments.length > 0) {
+                    commentsHtml = `<div class="moment-comments">
+                        ${moment.comments.map(comment => this.renderCommentItem(comment, isOwn, moment.user_id)).join('')}
+                    </div>`;
+                }
+                
+                const privateBadge = moment.is_private ? '<span class="private-badge">仅自己可见</span>' : '';
+                
+                return `
+                    <div class="moment-item" data-id="${moment.id}">
+                        <div class="moment-header">
+                            <div class="user-avatar">${avatar}</div>
+                            <div class="info">
+                                <div class="nickname">
+                                    ${moment.nickname || '用户'}
+                                    ${privateBadge}
+                                </div>
+                                <div class="time">${this.formatTime(moment.created_at)}</div>
+                            </div>
+                            ${isOwn ? `
+                                <button class="moment-action-btn" onclick="event.stopPropagation(); Moments.showMomentMenu(event, ${moment.id})">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                        <circle cx="19" cy="12" r="1"></circle>
+                                        <circle cx="5" cy="12" r="1"></circle>
+                                    </svg>
+                                </button>
+                            ` : ''}
+                        </div>
+                        
+                        ${moment.content ? `<div class="moment-content"><div class="text">${this.escapeHtml(moment.content)}</div></div>` : ''}
+                        
+                        ${imagesHtml}
+                        
+                        ${likesHtml}
+                        ${commentsHtml}
+                        
+                        <div class="moment-actions">
+                            <div class="moment-action-btn ${isLiked ? 'liked' : ''}" onclick="Moments.toggleLike(${moment.id}, ${isLiked})">
+                                <svg viewBox="0 0 24 24" fill="${isLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                                ${moment.like_count > 0 ? moment.like_count : '赞'}
+                            </div>
+                            <div class="moment-action-btn" onclick="Moments.showCommentInput(${moment.id})">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                </svg>
+                                ${moment.comment_count > 0 ? moment.comment_count : '评论'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            renderCommentItem(comment, isMomentOwner, momentOwnerId) {
+                const avatar = comment.user_avatar ? 
+                    `<img src="${comment.user_avatar}" class="avatar small" alt="${comment.user_nickname}">` :
+                    `<div class="avatar small"><div class="avatar-placeholder">${(comment.user_nickname || 'U')[0].toUpperCase()}</div></div>`;
+                
+                const replyToHtml = comment.reply_to_nickname ? 
+                    `<span class="comment-reply-to">回复 ${comment.reply_to_nickname}:</span>` : '';
+                
+                const canDelete = comment.user_id === this.currentUser.id || isMomentOwner;
+                const canReply = comment.user_id !== this.currentUser.id;
+                
+                return `
+                    <div class="comment-item" data-id="${comment.id}">
+                        <div class="user-avatar comment-avatar">${avatar}</div>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <div>
+                                    <span class="comment-nickname">${comment.user_nickname || '用户'}</span>
+                                    ${replyToHtml}
+                                </div>
+                                <span class="comment-time">${this.formatTime(comment.created_at)}</span>
+                            </div>
+                            <div class="comment-text">${this.escapeHtml(comment.content)}</div>
+                            <div class="comment-actions">
+                                ${canReply ? `<span class="comment-reply-btn" onclick="Moments.replyToComment(${comment.moment_id}, ${comment.id}, ${comment.user_id}, '${comment.user_nickname}')">回复</span>` : ''}
+                                ${canDelete ? `<span class="comment-delete-btn" onclick="Moments.deleteComment(${comment.id})">删除</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+            
+            previewImage(url) {
+                const preview = document.createElement('div');
+                preview.className = 'image-preview';
+                preview.innerHTML = `
+                    <img src="${url}" alt="图片">
+                    <button class="image-preview-close" onclick="this.parentElement.remove()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px;">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                `;
+                document.body.appendChild(preview);
+                preview.addEventListener('click', () => preview.remove());
+            },
+            
+            async toggleLike(momentId, isLiked) {
+                try {
+                    const res = await this.api(`/moments/${isLiked ? 'unlike' : 'like'}`, 'POST', { moment_id: momentId });
+                    
+                    if (res.success) {
+                        // 更新本地数据
+                        const moment = this.moments.find(m => m.id === momentId);
+                        if (moment) {
+                            if (isLiked) {
+                                moment.is_liked = 0;
+                                moment.like_count--;
+                                moment.likes = moment.likes.filter(l => l.user_id !== this.currentUser.id);
+                            } else {
+                                moment.is_liked = 1;
+                                moment.like_count++;
+                                moment.likes.push({
+                                    user_id: this.currentUser.id,
+                                    nickname: this.currentUser.nickname
+                                });
+                            }
+                            this.renderMoments();
+                        }
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('操作失败');
+                }
+            },
+            
+            showCommentInput(momentId) {
+                this.currentCommentMomentId = momentId;
+                this.currentReplyComment = null;
+                
+                const inputBar = document.getElementById('comment-input-bar');
+                const input = document.getElementById('comment-input');
+                
+                inputBar.style.display = 'flex';
+                input.placeholder = '评论';
+                input.value = '';
+                input.focus();
+            },
+            
+            replyToComment(momentId, commentId, userId, nickname) {
+                this.currentCommentMomentId = momentId;
+                this.currentReplyComment = {
+                    comment_id: commentId,
+                    user_id: userId,
+                    nickname: nickname
+                };
+                
+                const inputBar = document.getElementById('comment-input-bar');
+                const input = document.getElementById('comment-input');
+                
+                inputBar.style.display = 'flex';
+                input.placeholder = `回复 ${nickname}`;
+                input.value = '';
+                input.focus();
+            },
+            
+            async submitComment() {
+                const input = document.getElementById('comment-input');
+                const content = input.value.trim();
+                
+                if (!content || !this.currentCommentMomentId) return;
+                
+                try {
+                    const data = {
+                        moment_id: this.currentCommentMomentId,
+                        content: content
+                    };
+                    
+                    if (this.currentReplyComment) {
+                        data.reply_to_id = this.currentReplyComment.comment_id;
+                        data.reply_to_user_id = this.currentReplyComment.user_id;
+                    }
+                    
+                    const res = await this.api('/moments/comment', 'POST', data);
+                    
+                    if (res.success) {
+                        this.toast('评论成功');
+                        
+                        // 更新本地数据
+                        const moment = this.moments.find(m => m.id === this.currentCommentMomentId);
+                        if (moment) {
+                            moment.comment_count++;
+                            moment.comments.push(res.data);
+                            this.renderMoments();
+                        }
+                        
+                        // 隐藏输入框
+                        this.hideCommentInput();
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('评论失败');
+                }
+            },
+            
+            hideCommentInput() {
+                const inputBar = document.getElementById('comment-input-bar');
+                const input = document.getElementById('comment-input');
+                const sendBtn = document.getElementById('comment-send-btn');
+                
+                inputBar.style.display = 'none';
+                input.value = '';
+                sendBtn.disabled = true;
+                this.currentCommentMomentId = null;
+                this.currentReplyComment = null;
+            },
+            
+            async deleteComment(commentId) {
+                if (!confirm('确定删除该评论吗？')) return;
+                
+                try {
+                    const res = await this.api('/moments/delete_comment', 'POST', { comment_id: commentId });
+                    
+                    if (res.success) {
+                        this.toast('删除成功');
+                        
+                        // 更新本地数据
+                        for (let moment of this.moments) {
+                            const idx = moment.comments.findIndex(c => c.id === commentId);
+                            if (idx !== -1) {
+                                moment.comments.splice(idx, 1);
+                                moment.comment_count--;
+                                this.renderMoments();
+                                break;
+                            }
+                        }
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('删除失败');
+                }
+            },
+            
+            showMomentMenu(event, momentId) {
+                event.stopPropagation();
+                
+                // 移除已存在的菜单
+                const existingMenu = document.querySelector('.moment-menu');
+                if (existingMenu) existingMenu.remove();
+                
+                const overlay = document.getElementById('menu-overlay');
+                overlay.classList.add('active');
+                
+                const menu = document.createElement('div');
+                menu.className = 'moment-menu';
+                menu.style.top = `${event.clientY + 10}px`;
+                menu.style.right = `${window.innerWidth - event.clientX + 10}px`;
+                menu.innerHTML = `
+                    <div class="moment-menu-item danger" onclick="Moments.deleteMoment(${momentId}); Moments.hideMenu();">删除</div>
+                `;
+                
+                document.body.appendChild(menu);
+            },
+            
+            hideMenu() {
+                const overlay = document.getElementById('menu-overlay');
+                overlay.classList.remove('active');
+                
+                const menu = document.querySelector('.moment-menu');
+                if (menu) menu.remove();
+            },
+            
+            async deleteMoment(momentId) {
+                if (!confirm('确定删除这条朋友圈吗？')) return;
+                
+                try {
+                    const res = await this.api('/moments/delete', 'POST', { moment_id: momentId });
+                    
+                    if (res.success) {
+                        this.toast('删除成功');
+                        
+                        // 更新本地数据
+                        this.moments = this.moments.filter(m => m.id !== momentId);
+                        this.renderMoments();
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('删除失败');
+                }
+            },
+            
+            // 发布朋友圈相关
+            showPublish() {
+                this.selectedImages = [];
+                const modal = document.getElementById('publish-modal');
+                const textarea = document.getElementById('publish-textarea');
+                const privateCheckbox = document.getElementById('publish-private');
+                
+                textarea.value = '';
+                privateCheckbox.checked = false;
+                this.renderPublishImages();
+                
+                modal.classList.add('active');
+            },
+            
+            hidePublish() {
+                const modal = document.getElementById('publish-modal');
+                modal.classList.remove('active');
+                this.selectedImages = [];
+            },
+            
+            triggerImageUpload() {
+                const input = document.getElementById('image-input');
+                input.click();
+            },
+            
+            async handleImageSelect(event) {
+                const files = event.target.files;
+                if (!files || files.length === 0) return;
+                
+                // 最多9张图片
+                const maxCount = 9 - this.selectedImages.length;
+                if (maxCount <= 0) {
+                    this.toast('最多只能上传9张图片');
+                    return;
+                }
+                
+                for (let i = 0; i < Math.min(files.length, maxCount); i++) {
+                    const file = files[i];
+                    
+                    // 上传图片
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    try {
+                        const res = await this.api('/moments/upload_image', 'POST', formData, true);
+                        
+                        if (res.success) {
+                            this.selectedImages.push(res.data.url);
+                        } else {
+                            this.toast(`图片上传失败: ${res.message}`);
+                        }
+                    } catch (e) {
+                        this.toast('图片上传失败');
+                    }
+                }
+                
+                this.renderPublishImages();
+                this.checkPublishButton();
+            },
+            
+            renderPublishImages() {
+                const container = document.getElementById('publish-images');
+                if (!container) return;
+                
+                let html = this.selectedImages.map((img, idx) => `
+                    <div class="publish-image-item">
+                        <img src="${img}" alt="图片">
+                        <div class="remove-btn" onclick="Moments.removeImage(${idx})">×</div>
+                    </div>
+                `).join('');
+                
+                if (this.selectedImages.length < 9) {
+                    html += `
+                        <div class="publish-image-item publish-image-add" onclick="Moments.triggerImageUpload()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = html;
+            },
+            
+            removeImage(index) {
+                this.selectedImages.splice(index, 1);
+                this.renderPublishImages();
+                this.checkPublishButton();
+            },
+            
+            async submitPublish() {
+                const textarea = document.getElementById('publish-textarea');
+                const privateCheckbox = document.getElementById('publish-private');
+                
+                const content = textarea.value.trim();
+                const isPrivate = privateCheckbox.checked ? 1 : 0;
+                
+                if (!content && this.selectedImages.length === 0) {
+                    this.toast('请输入内容或上传图片');
+                    return;
+                }
+                
+                try {
+                    const res = await this.api('/moments/publish', 'POST', {
+                        content: content,
+                        images: this.selectedImages,
+                        is_private: isPrivate
+                    });
+                    
+                    if (res.success) {
+                        this.toast('发布成功');
+                        this.hidePublish();
+                        
+                        // 刷新列表
+                        await this.loadMoments(true);
+                    } else {
+                        this.toast(res.message);
+                    }
+                } catch (e) {
+                    this.toast('发布失败');
+                }
+            },
+            
+            back() {
+                window.location.href = 'index.html';
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            Moments.init();
+        });
+    </script>
+</body>
+</html>

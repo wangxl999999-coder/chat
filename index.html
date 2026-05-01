@@ -121,6 +121,23 @@
                 <div class="profile-section">
                     <div class="profile-section-title">我的</div>
                     
+                    <div class="profile-item" onclick="App.openMoments()">
+                        <div class="profile-item-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="9" y1="9" x2="15" y2="9"></line>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                                <line x1="9" y1="12" x2="15" y2="12"></line>
+                            </svg>
+                            <span class="profile-item-text">朋友圈</span>
+                        </div>
+                        <div class="profile-item-value">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    
                     <div class="profile-item" onclick="App.showEditProfile()">
                         <div class="profile-item-label">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -231,7 +248,7 @@
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" id="search-input" placeholder="搜索用户号码或昵称" autofocus>
+                    <input type="text" id="search-input" placeholder="搜索用户号码、手机号或昵称" autofocus>
                 </div>
             </div>
             <div style="width: 50px;"></div>

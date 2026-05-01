@@ -630,6 +630,11 @@ const App = {
         window.location.href = 'edit-profile.html';
     },
     
+    // 打开朋友圈
+    openMoments() {
+        window.location.href = 'moments.html';
+    },
+    
     // 退出登录
     async logout() {
         try {

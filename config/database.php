@@ -123,6 +123,58 @@ function initDB() {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员表'
         ");
         
+        // 朋友圈表
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS moments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL COMMENT '发布者ID',
+                content TEXT COMMENT '文字内容',
+                images TEXT COMMENT '图片URL，JSON数组',
+                is_private TINYINT DEFAULT 0 COMMENT '是否私有: 0公开 1私有',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_user_id (user_id),
+                INDEX idx_created_at (created_at),
+                INDEX idx_is_private (is_private)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='朋友圈表'
+        ");
+        
+        // 评论表
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS comments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                moment_id INT NOT NULL COMMENT '朋友圈ID',
+                user_id INT NOT NULL COMMENT '评论者ID',
+                reply_to_id INT DEFAULT NULL COMMENT '回复的评论ID，NULL表示直接评论',
+                reply_to_user_id INT DEFAULT NULL COMMENT '回复的用户ID',
+                content TEXT NOT NULL COMMENT '评论内容',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (moment_id) REFERENCES moments(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (reply_to_id) REFERENCES comments(id) ON DELETE CASCADE,
+                FOREIGN KEY (reply_to_user_id) REFERENCES users(id) ON DELETE SET NULL,
+                INDEX idx_moment_id (moment_id),
+                INDEX idx_user_id (user_id),
+                INDEX idx_created_at (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评论表'
+        ");
+        
+        // 点赞表
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS likes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                moment_id INT NOT NULL COMMENT '朋友圈ID',
+                user_id INT NOT NULL COMMENT '点赞者ID',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_like (moment_id, user_id),
+                FOREIGN KEY (moment_id) REFERENCES moments(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_moment_id (moment_id),
+                INDEX idx_user_id (user_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='点赞表'
+        ");
+        
         // 插入默认管理员（用户名: admin, 密码: admin123）
         $defaultAdmin = $pdo->prepare("INSERT IGNORE INTO admins (username, password, role) VALUES (?, ?, 2)");
         $defaultAdmin->execute(['admin', password_hash('admin123', PASSWORD_DEFAULT)]);

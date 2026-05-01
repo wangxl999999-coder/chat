@@ -39,7 +39,7 @@ if (empty($module)) {
 }
 
 // 检查是否需要登录
-$protectedModules = ['user', 'friend', 'message', 'conversation'];
+$protectedModules = ['user', 'friend', 'message', 'conversation', 'moments'];
 if (in_array($module, $protectedModules)) {
     if (!isLoggedIn()) {
         jsonResponse(false, '请先登录');
@@ -81,6 +81,10 @@ switch ($module) {
         
     case 'admin':
         require_once 'admin.php';
+        break;
+        
+    case 'moments':
+        require_once 'moments.php';
         break;
         
     default:
