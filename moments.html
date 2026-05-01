@@ -609,12 +609,12 @@
         <div class="publish-body">
             <textarea class="publish-textarea" id="publish-textarea" placeholder="这一刻的想法..."></textarea>
             <div class="publish-images" id="publish-images">
-                <div class="publish-image-item publish-image-add" onclick="Moments.triggerImageUpload()">
+                <div class="publish-image-item publish-image-add">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    <input type="file" id="image-input" accept="image/*" multiple onchange="Moments.handleImageSelect(event)">
+                    <input type="file" id="image-input" accept="image/*" multiple onchange="Moments.handleImageSelect(event)" style="display:none">
                 </div>
             </div>
             <div class="publish-options">
@@ -1296,16 +1296,28 @@
                 
                 if (this.selectedImages.length < 9) {
                     html += `
-                        <div class="publish-image-item publish-image-add" onclick="Moments.triggerImageUpload()">
+                        <div class="publish-image-item publish-image-add">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
+                            <input type="file" id="image-input" accept="image/*" multiple onchange="Moments.handleImageSelect(event)" style="display:none">
                         </div>
                     `;
                 }
                 
                 container.innerHTML = html;
+                
+                // 重新绑定点击事件
+                const addBtn = container.querySelector('.publish-image-add');
+                if (addBtn) {
+                    addBtn.style.cursor = 'pointer';
+                    addBtn.onclick = (e) => {
+                        if (e.target.tagName !== 'INPUT') {
+                            Moments.triggerImageUpload();
+                        }
+                    };
+                }
             },
             
             removeImage(index) {
