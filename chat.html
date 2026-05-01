@@ -464,13 +464,25 @@
                     formData.append('image', file);
                     
                     const uploadUrl = API_BASE + '?module=message&action=upload_image';
+                    console.log('上传图片到:', uploadUrl, '文件大小:', file.size);
+                    
                     const response = await fetch(uploadUrl, {
                         method: 'POST',
                         credentials: 'include',
                         body: formData
                     });
                     
+                    console.log('上传响应状态:', response.status);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('上传错误响应:', errorText);
+                        this.toast('上传失败: HTTP ' + response.status);
+                        return;
+                    }
+                    
                     const res = await response.json();
+                    console.log('上传响应:', res);
                     
                     if (res.success) {
                         // 发送图片消息
@@ -487,10 +499,11 @@
                             this.toast(sendRes.message);
                         }
                     } else {
-                        this.toast(res.message);
+                        this.toast(res.message || '上传失败');
                     }
                 } catch (e) {
-                    this.toast('上传失败');
+                    console.error('上传异常:', e);
+                    this.toast('上传失败: ' + e.message);
                 }
             },
             

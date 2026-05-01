@@ -21,3 +21,30 @@
 [01-May-2026 10:08:22 Asia/Shanghai] 发送验证码到手机 18511404343: 077573
 [01-May-2026 10:32:40 Asia/Shanghai] 发送验证码到手机 18511404343: 305868
 [01-May-2026 10:33:54 Asia/Shanghai] 发送验证码到手机 17639392150: 183436
+[01-May-2026 10:46:20 Asia/Shanghai] 发送验证码到手机 15886773726: 890683
+[01-May-2026 10:46:29 Asia/Shanghai] PHP Fatal error:  Uncaught Error: Call to undefined function exif_imagetype() in D:\my\tare-git\chat\includes\functions.php:206
+Stack trace:
+#0 D:\my\tare-git\chat\api\auth.php(99): uploadImageFromBase64('iVBORw0KGgoAAAA...', 'avatars')
+#1 D:\my\tare-git\chat\api\index.php(63): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\includes\functions.php on line 206
+[01-May-2026 10:47:26 Asia/Shanghai] 发送验证码到手机 15886773726: 332553
+[01-May-2026 10:47:34 Asia/Shanghai] PHP Fatal error:  Uncaught Error: Call to undefined function exif_imagetype() in D:\my\tare-git\chat\includes\functions.php:206
+Stack trace:
+#0 D:\my\tare-git\chat\api\auth.php(99): uploadImageFromBase64('iVBORw0KGgoAAAA...', 'avatars')
+#1 D:\my\tare-git\chat\api\index.php(63): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\includes\functions.php on line 206
+[01-May-2026 10:53:57 Asia/Shanghai] 发送验证码到手机 15886773726: 921366
+[01-May-2026 10:58:09 Asia/Shanghai] PHP Fatal error:  Uncaught Error: Call to undefined function exif_imagetype() in D:\my\tare-git\chat\includes\functions.php:269
+Stack trace:
+#0 D:\my\tare-git\chat\api\message.php(196): uploadImage(Array, 'images')
+#1 D:\my\tare-git\chat\api\index.php(75): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\includes\functions.php on line 269
+[01-May-2026 11:01:16 Asia/Shanghai] PHP Fatal error:  Uncaught Error: Call to undefined function exif_imagetype() in D:\my\tare-git\chat\includes\functions.php:269
+Stack trace:
+#0 D:\my\tare-git\chat\api\message.php(196): uploadImage(Array, 'images')
+#1 D:\my\tare-git\chat\api\index.php(75): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\includes\functions.php on line 269

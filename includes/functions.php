@@ -150,6 +150,18 @@ function isValidPassword($password) {
     return $len >= 6 && $len <= 20;
 }
 
+// 根据 MIME 类型获取文件扩展名
+function getExtensionFromMimeType($mimeType) {
+    $mimeMap = [
+        'image/jpeg' => '.jpg',
+        'image/jpg' => '.jpg',
+        'image/png' => '.png',
+        'image/gif' => '.gif',
+        'image/webp' => '.webp'
+    ];
+    return isset($mimeMap[$mimeType]) ? $mimeMap[$mimeType] : '.jpg';
+}
+
 // 从 base64 字符串上传图片
 function uploadImageFromBase64($base64Data, $subDir = '') {
     if (empty($base64Data)) {
@@ -161,11 +173,7 @@ function uploadImageFromBase64($base64Data, $subDir = '') {
     
     // 解析 base64 数据
     if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $matches)) {
-        $imageType = strtolower($matches[1]);
         $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
-    } else {
-        // 尝试直接解码
-        $imageType = 'png';
     }
     
     $decodedData = base64_decode($base64Data);
@@ -202,8 +210,8 @@ function uploadImageFromBase64($base64Data, $subDir = '') {
         ];
     }
     
-    // 生成文件名
-    $extension = image_type_to_extension(exif_imagetype($tempFile));
+    // 生成文件名（使用 MIME 类型获取扩展名）
+    $extension = getExtensionFromMimeType($mimeType);
     $filename = uniqid() . $extension;
     
     // 构建保存路径
@@ -265,8 +273,8 @@ function uploadImage($file, $subDir = '') {
         ];
     }
     
-    // 生成文件名
-    $extension = image_type_to_extension(exif_imagetype($file['tmp_name']));
+    // 生成文件名（使用 MIME 类型获取扩展名，不依赖 exif 扩展）
+    $extension = getExtensionFromMimeType($mimeType);
     $filename = uniqid() . $extension;
     
     // 构建保存路径
