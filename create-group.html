@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>创建群聊 - 阅后即焚</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .create-group-page {
+            background: var(--bg-primary);
+        }
+        .group-form {
+            padding: 16px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .form-label .count {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            border-color: var(--primary-color);
+        }
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .selected-members {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+        }
+        .selected-member {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+        .selected-member button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            color: white;
+            padding: 0;
+        }
+        
+        .friend-list-title {
+            font-size: 13px;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .friend-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .friend-item:active {
+            background: var(--bg-secondary);
+        }
+        .friend-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .friend-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .friend-item.selected .friend-checkbox {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .friend-checkbox svg {
+            width: 14px;
+            height: 14px;
+            color: white;
+            display: none;
+        }
+        .friend-item.selected .friend-checkbox svg {
+            display: block;
+        }
+        .friend-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            margin-right: 12px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .friend-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .friend-avatar-initials {
+            font-size: 18px;
+            color: var(--text-muted);
+        }
+        .friend-info {
+            flex: 1;
+        }
+        .friend-nickname {
+            font-size: 15px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        .friend-number {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .create-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            padding: 14px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .create-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+        .create-btn:active:not(:disabled) {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+        
+        .empty-friends {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .empty-friends svg {
+            width: 80px;
+            height: 80px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .empty-friends h3 {
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .empty-friends p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container create-group-page">
+        <header class="app-header">
+            <button class="chat-back-btn" onclick="CreateGroup.back()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <h1>创建群聊</h1>
+            <div style="width: 40px;"></div>
+        </header>
+        
+        <div class="app-main" style="padding-top: 0; padding-bottom: 80px;">
+            <div class="group-form">
+                <div class="form-group">
+                    <div class="form-label">
+                        <span>群名称</span>
+                    </div>
+                    <input type="text" class="form-input" id="group-name-input" placeholder="请输入群名称（必填）" maxlength="50">
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-label">
+                        <span>选择成员</span>
+                        <span class="count">
+                            已选择 <span id="selected-count">0</span>/2 人（至少2人）
+                        </span>
+                    </div>
+                    <div id="selected-members" class="selected-members" style="display: none;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="friend-list-title">好友列表</div>
+            <div id="friend-list">
+            </div>
+            <div id="empty-friends" class="empty-friends" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <h3>暂无好友</h3>
+                <p>请先添加好友后再创建群聊</p>
+            </div>
+        </div>
+        
+        <button class="create-btn" id="create-btn" onclick="CreateGroup.createGroup()" disabled>
+            创建群聊
+        </button>
+    </div>
+    
+    <script>
+        const API_BASE = '/api/index.php';
+        
+        const CreateGroup = {
+            friends: [],
+            selectedIds: new Set(),
+            
+            parseEndpoint(endpoint) {
+                let path = endpoint.split('?')[0];
+                path = path.replace(/^\//, '');
+                const parts = path.split('/');
+                return {
+                    module: parts[0] || '',
+                    action: parts[1] || ''
+                };
+            },
+            
+            getQueryString(endpoint) {
+                const qIndex = endpoint.indexOf('?');
+                if (qIndex !== -1) {
+                    return '&' + endpoint.substring(qIndex + 1);
+                }
+                return '';
+            },
+            
+            async api(endpoint, method = 'GET', data = null) {
+                const { module, action } = this.parseEndpoint(endpoint);
+                const queryString = this.getQueryString(endpoint);
+                const url = API_BASE + '?module=' + module + '&action=' + action + queryString;
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                };
+                
+                if (data && method !== 'GET') {
+                    options.body = JSON.stringify(data);
+                }
+                
+                try {
+                    const response = await fetch(url, options);
+                    const result = await response.json();
+                    return result;
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            toast(message, duration = 2000) {
+                const existingToast = document.querySelector('.toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, duration);
+            },
+            
+            async init() {
+                const loggedIn = await this.checkLogin();
+                if (!loggedIn) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+                
+                await this.loadFriends();
+                this.bindEvents();
+            },
+            
+            async checkLogin() {
+                try {
+                    const res = await this.api('/auth/check_login');
+                    return res.success;
+                } catch (e) {
+                    console.error('检查登录失败:', e);
+                    return false;
+                }
+            },
+            
+            async loadFriends() {
+                try {
+                    const res = await this.api('/friend/list');
+                    
+                    if (res.success) {
+                        this.friends = res.data || [];
+                        this.renderFriends();
+                    }
+                } catch (e) {
+                    console.error('加载好友失败:', e);
+                    this.toast('加载好友失败');
+                }
+            },
+            
+            renderFriends() {
+                const container = document.getElementById('friend-list');
+                const emptyState = document.getElementById('empty-friends');
+                
+                if (!this.friends || this.friends.length === 0) {
+                    container.style.display = 'none';
+                    emptyState.style.display = 'flex';
+                    return;
+                }
+                
+                container.style.display = 'block';
+                emptyState.style.display = 'none';
+                
+                this.friends.forEach(friend => {
+                    const itemHtml = this.renderFriendItem(friend);
+                    container.insertAdjacentHTML('beforeend', itemHtml);
+                });
+            },
+            
+            renderFriendItem(friend) {
+                const displayName = friend.remark_name || friend.nickname || '用户';
+                const avatarHtml = friend.avatar ? 
+                    `<img src="${friend.avatar}" alt="${displayName}">` :
+                    `<div class="friend-avatar-initials">${displayName[0].toUpperCase()}</div>`;
+                
+                return `
+                    <div class="friend-item" data-user-id="${friend.id}" data-nickname="${displayName}" onclick="CreateGroup.toggleFriend(this, ${friend.id}, '${displayName.replace(/'/g, "\\'")}')">
+                        <div class="friend-checkbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="friend-avatar">${avatarHtml}</div>
+                        <div class="friend-info">
+                            <div class="friend-nickname">${this.escapeHtml(displayName)}</div>
+                            <div class="friend-number">账号: ${friend.user_number}</div>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+            
+            bindEvents() {
+                const nameInput = document.getElementById('group-name-input');
+                nameInput.addEventListener('input', () => {
+                    this.updateCreateButton();
+                });
+            },
+            
+            toggleFriend(element, userId, nickname) {
+                const isSelected = element.classList.contains('selected');
+                
+                if (isSelected) {
+                    element.classList.remove('selected');
+                    this.selectedIds.delete(userId);
+                } else {
+                    element.classList.add('selected');
+                    this.selectedIds.add(userId);
+                }
+                
+                this.updateSelectedDisplay();
+                this.updateCreateButton();
+            },
+            
+            updateSelectedDisplay() {
+                const container = document.getElementById('selected-members');
+                const countEl = document.getElementById('selected-count');
+                
+                countEl.textContent = this.selectedIds.size;
+                
+                if (this.selectedIds.size === 0) {
+                    container.style.display = 'none';
+                    return;
+                }
+                
+                container.style.display = 'flex';
+                container.innerHTML = '';
+                
+                this.selectedIds.forEach(userId => {
+                    const friend = this.friends.find(f => f.id === userId);
+                    if (!friend) return;
+                    
+                    const displayName = friend.remark_name || friend.nickname || '用户';
+                    
+                    const memberHtml = `
+                        <div class="selected-member">
+                            <span>${this.escapeHtml(displayName)}</span>
+                            <button onclick="event.stopPropagation(); CreateGroup.removeMember(${userId})">×</button>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', memberHtml);
+                });
+            },
+            
+            removeMember(userId) {
+                const element = document.querySelector(`.friend-item[data-user-id="${userId}"]`);
+                if (element) {
+                    element.classList.remove('selected');
+                }
+                this.selectedIds.delete(userId);
+                this.updateSelectedDisplay();
+                this.updateCreateButton();
+            },
+            
+            updateCreateButton() {
+                const nameInput = document.getElementById('group-name-input');
+                const createBtn = document.getElementById('create-btn');
+                
+                const hasName = nameInput.value.trim().length > 0;
+                const hasEnoughMembers = this.selectedIds.size >= 2;
+                
+                createBtn.disabled = !hasName || !hasEnoughMembers;
+            },
+            
+            async createGroup() {
+                const nameInput = document.getElementById('group-name-input');
+                const groupName = nameInput.value.trim();
+                
+                if (!groupName) {
+                    this.toast('请输入群名称');
+                    return;
+                }
+                
+                if (this.selectedIds.size < 2) {
+                    this.toast('至少需要选择2名成员');
+                    return;
+                }
+                
+                try {
+                    const res = await this.api('/group/create', 'POST', {
+                        group_name: groupName,
+                        member_ids: Array.from(this.selectedIds)
+                    });
+                    
+                    if (res.success) {
+                        this.toast('群组创建成功');
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1000);
+                    } else {
+                        this.toast(res.message || '创建失败');
+                    }
+                } catch (e) {
+                    this.toast('创建失败');
+                    console.error('创建群组失败:', e);
+                }
+            },
+            
+            back() {
+                window.location.href = 'index.html';
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            CreateGroup.init();
+        });
+    </script>
+</body>
+</html>

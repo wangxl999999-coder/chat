@@ -9,9 +9,7 @@ const App = {
     
     // 解析endpoint为查询参数 (支持 '/auth/login' 和 'auth/login' 两种格式)
     parseEndpoint(endpoint) {
-        // 移除可能的查询字符串
         let path = endpoint.split('?')[0];
-        // 移除开头的斜杠
         path = path.replace(/^\//, '');
         const parts = path.split('/');
         return {
@@ -70,7 +68,6 @@ const App = {
     updateUserInfo() {
         if (!this.currentUser) return;
         
-        // 我的页面信息
         const profileName = document.getElementById('profile-name');
         const profileNumber = document.getElementById('profile-number');
         const profileBio = document.getElementById('profile-bio');
@@ -85,7 +82,6 @@ const App = {
             profileBio.textContent = this.currentUser.bio || '这个人很懒，什么都没写';
         }
         
-        // 头像
         const avatarElements = document.querySelectorAll('.user-avatar');
         avatarElements.forEach(el => {
             if (this.currentUser.avatar) {
@@ -98,7 +94,6 @@ const App = {
     
     // 绑定事件
     bindEvents() {
-        // 底部导航
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -107,7 +102,6 @@ const App = {
             });
         });
         
-        // 搜索用户
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
             let searchTimer;
@@ -119,7 +113,6 @@ const App = {
             });
         }
         
-        // 添加好友按钮
         const addFriendBtn = document.getElementById('add-friend-btn');
         if (addFriendBtn) {
             addFriendBtn.addEventListener('click', () => {
@@ -127,7 +120,6 @@ const App = {
             });
         }
         
-        // 搜索页面返回
         const searchBackBtn = document.getElementById('search-back-btn');
         if (searchBackBtn) {
             searchBackBtn.addEventListener('click', () => {
@@ -135,7 +127,6 @@ const App = {
             });
         }
         
-        // 退出登录
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
@@ -143,7 +134,6 @@ const App = {
             });
         }
         
-        // 编辑资料
         const editProfileBtn = document.getElementById('edit-profile-btn');
         if (editProfileBtn) {
             editProfileBtn.addEventListener('click', () => {
@@ -151,7 +141,6 @@ const App = {
             });
         }
         
-        // 好友申请列表
         const friendRequestsBtn = document.getElementById('friend-requests-btn');
         if (friendRequestsBtn) {
             friendRequestsBtn.addEventListener('click', () => {
@@ -159,7 +148,6 @@ const App = {
             });
         }
         
-        // 好友申请页面返回
         const requestsBackBtn = document.getElementById('requests-back-btn');
         if (requestsBackBtn) {
             requestsBackBtn.addEventListener('click', () => {
@@ -167,7 +155,6 @@ const App = {
             });
         }
         
-        // 点击页面其他区域关闭弹出菜单
         document.addEventListener('click', (e) => {
             const popupMenu = document.getElementById('popup-menu');
             const addBtn = document.querySelector('[onclick="App.showAddMenu()"]');
@@ -177,7 +164,6 @@ const App = {
         });
     },
     
-    // 显示添加菜单
     showAddMenu() {
         const popupMenu = document.getElementById('popup-menu');
         if (popupMenu) {
@@ -185,7 +171,6 @@ const App = {
         }
     },
     
-    // 隐藏添加菜单
     hideAddMenu() {
         const popupMenu = document.getElementById('popup-menu');
         if (popupMenu) {
@@ -193,7 +178,6 @@ const App = {
         }
     },
     
-    // 隐藏好友申请页面
     hideFriendRequests() {
         const requestsPage = document.getElementById('friend-requests-page');
         if (requestsPage) {
@@ -205,23 +189,19 @@ const App = {
     switchPage(page) {
         this.currentPage = page;
         
-        // 更新导航状态
         document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.toggle('active', item.dataset.page === page);
         });
         
-        // 隐藏所有页面
         document.querySelectorAll('.page-view').forEach(pv => {
             pv.classList.remove('active');
         });
         
-        // 显示目标页面
         const targetPage = document.getElementById(`page-${page}`);
         if (targetPage) {
             targetPage.classList.add('active');
         }
         
-        // 加载页面数据
         switch (page) {
             case 'conversation':
                 this.loadConversations();
@@ -235,7 +215,6 @@ const App = {
         }
     },
     
-    // API请求
     async api(endpoint, method = 'GET', data = null) {
         const { module, action } = this.parseEndpoint(endpoint);
         const queryString = this.getQueryString(endpoint);
@@ -262,9 +241,7 @@ const App = {
         }
     },
     
-    // 显示Toast
     toast(message, duration = 2000) {
-        // 移除已存在的toast
         const existingToast = document.querySelector('.toast');
         if (existingToast) {
             existingToast.remove();
@@ -280,7 +257,6 @@ const App = {
         }, duration);
     },
     
-    // 格式化时间
     formatTime(timeStr) {
         if (!timeStr) return '';
         
@@ -292,22 +268,18 @@ const App = {
         const diffDays = Math.floor((today - msgDate) / (1000 * 60 * 60 * 24));
         
         if (diffDays === 0) {
-            // 今天
             return time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
         } else if (diffDays === 1) {
-            // 昨天
             return '昨天';
         } else if (diffDays < 7) {
-            // 一周内
             const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
             return weekdays[time.getDay()];
         } else {
-            // 更早
             return `${time.getMonth() + 1}/${time.getDate()}`;
         }
     },
     
-    // 加载会话列表
+    // 加载会话列表（包含单聊和群聊）
     async loadConversations() {
         try {
             const res = await this.api('/conversation/list');
@@ -324,7 +296,6 @@ const App = {
         const container = document.getElementById('conversation-list');
         const emptyState = document.getElementById('conversation-empty');
         
-        // 更新未读数角标
         const badge = document.querySelector('.nav-item[data-page="conversation"] .nav-badge');
         if (badge) {
             if (totalUnread > 0) {
@@ -344,9 +315,12 @@ const App = {
         if (emptyState) emptyState.style.display = 'none';
         
         container.innerHTML = conversations.map(conv => {
+            const isGroup = conv.type === 2;
             const avatar = conv.avatar ? 
                 `<img src="${conv.avatar}" class="avatar" alt="${conv.nickname}">` :
-                `<div class="avatar"><div class="avatar-placeholder">${(conv.nickname || 'U')[0].toUpperCase()}</div></div>`;
+                `<div class="avatar"><div class="avatar-placeholder">${(conv.nickname || (isGroup ? '群' : 'U'))[0].toUpperCase()}</div></div>`;
+            
+            const groupBadge = isGroup ? '<span style="font-size: 12px; color: var(--text-muted); margin-left: 4px;">[群]</span>' : '';
             
             const lastMessage = conv.last_message || '暂无消息';
             const time = this.formatTime(conv.last_message_time);
@@ -354,10 +328,10 @@ const App = {
                 `<span class="list-item-badge">${conv.unread_count > 99 ? '99+' : conv.unread_count}</span>` : '';
             
             return `
-                <div class="list-item" onclick="App.openChat(${conv.target_id}, '${conv.nickname}', '${conv.avatar || ''}')">
+                <div class="list-item" onclick="App.openChat(${conv.target_id}, '${conv.nickname}', '${conv.avatar || ''}', ${isGroup ? 2 : 1})">
                     ${avatar}
                     <div class="list-item-content">
-                        <div class="list-item-title">${conv.nickname || '用户'}</div>
+                        <div class="list-item-title">${conv.nickname || '用户'}${groupBadge}</div>
                         <div class="list-item-subtitle">${lastMessage}</div>
                     </div>
                     <div class="list-item-meta">
@@ -369,16 +343,15 @@ const App = {
         }).join('');
     },
     
-    // 打开聊天
-    openChat(targetId, nickname, avatar) {
-        // 存储聊天目标信息
+    // 打开聊天（支持单聊和群聊）
+    openChat(targetId, nickname, avatar, chatType = 1) {
         sessionStorage.setItem('chat_target', JSON.stringify({
             id: targetId,
             nickname,
-            avatar
+            avatar,
+            chatType
         }));
         
-        // 跳转到聊天页面
         window.location.href = 'chat.html';
     },
     
@@ -394,7 +367,6 @@ const App = {
         }
     },
     
-    // 渲染好友列表
     renderFriends(friends) {
         const container = document.getElementById('friend-list');
         const emptyState = document.getElementById('friend-empty');
@@ -407,7 +379,6 @@ const App = {
         
         if (emptyState) emptyState.style.display = 'none';
         
-        // 按昵称拼音首字母分组（简化处理）
         container.innerHTML = friends.map(friend => {
             const avatar = friend.avatar ? 
                 `<img src="${friend.avatar}" class="avatar" alt="${friend.nickname}">` :
@@ -427,7 +398,6 @@ const App = {
         }).join('');
     },
     
-    // 显示搜索页面
     showSearchPage() {
         const searchPage = document.getElementById('search-page');
         if (searchPage) {
@@ -435,7 +405,6 @@ const App = {
         }
     },
     
-    // 隐藏搜索页面
     hideSearchPage() {
         const searchPage = document.getElementById('search-page');
         if (searchPage) {
@@ -447,7 +416,6 @@ const App = {
         if (searchInput) searchInput.value = '';
     },
     
-    // 搜索用户
     async searchUsers(keyword) {
         const results = document.getElementById('search-results');
         if (!results) return;
@@ -469,7 +437,6 @@ const App = {
         }
     },
     
-    // 渲染搜索结果
     renderSearchResults(users) {
         const results = document.getElementById('search-results');
         if (!results) return;
@@ -479,7 +446,6 @@ const App = {
             return;
         }
         
-        // 确保是数组
         const userList = Array.isArray(users) ? users : [users];
         
         results.innerHTML = userList.map(user => {
@@ -487,7 +453,6 @@ const App = {
                 `<img src="${user.avatar}" class="avatar" alt="${user.nickname}">` :
                 `<div class="avatar"><div class="avatar-placeholder">${(user.nickname || 'U')[0].toUpperCase()}</div></div>`;
             
-            // 好友状态
             let statusBadge = '';
             let actionBtn = '';
             
@@ -495,7 +460,7 @@ const App = {
                 statusBadge = '<span class="friend-status-badge is-friend">我自己</span>';
             } else if (user.friend_status === 1) {
                 statusBadge = '<span class="friend-status-badge is-friend">已添加</span>';
-                actionBtn = `<button class="btn btn-sm" onclick="event.stopPropagation(); App.openChat(${user.id}, '${user.nickname}', '${user.avatar || ''}')">发消息</button>`;
+                actionBtn = `<button class="btn btn-sm" onclick="event.stopPropagation(); App.openChat(${user.id}, '${user.nickname}', '${user.avatar || ''}', 1)">发消息</button>`;
             } else if (user.friend_status === 0) {
                 statusBadge = '<span class="friend-status-badge pending">待确认</span>';
             } else {
@@ -518,13 +483,11 @@ const App = {
         }).join('');
     },
     
-    // 添加好友
     async addFriend(friendId) {
         try {
             const res = await this.api('/friend/add', 'POST', { friend_id: friendId });
             if (res.success) {
                 this.toast('好友申请已发送');
-                // 刷新搜索结果
                 const searchInput = document.getElementById('search-input');
                 if (searchInput && searchInput.value) {
                     this.searchUsers(searchInput.value);
@@ -537,7 +500,6 @@ const App = {
         }
     },
     
-    // 显示好友申请列表
     async showFriendRequests() {
         try {
             const res = await this.api('/friend/requests?type=received');
@@ -551,7 +513,6 @@ const App = {
         }
     },
     
-    // 渲染好友申请列表
     renderFriendRequests(requests) {
         const container = document.getElementById('friend-requests-list');
         if (!container) return;
@@ -582,7 +543,6 @@ const App = {
         }).join('');
     },
     
-    // 接受好友申请
     async acceptFriendRequest(friendId) {
         try {
             const res = await this.api('/friend/accept', 'POST', { friend_id: friendId });
@@ -598,7 +558,6 @@ const App = {
         }
     },
     
-    // 拒绝好友申请
     async rejectFriendRequest(friendId) {
         try {
             const res = await this.api('/friend/reject', 'POST', { friend_id: friendId });
@@ -613,29 +572,33 @@ const App = {
         }
     },
     
-    // 打开好友详情
     openFriendDetail(friendId) {
         sessionStorage.setItem('friend_detail_id', friendId);
         window.location.href = 'friend-detail.html';
     },
     
-    // 加载个人资料
     loadProfile() {
-        // 从currentUser更新
         this.updateUserInfo();
     },
     
-    // 显示编辑资料
     showEditProfile() {
         window.location.href = 'edit-profile.html';
     },
     
-    // 打开朋友圈
     openMoments() {
         window.location.href = 'moments.html';
     },
     
-    // 退出登录
+    // 打开收藏页面
+    openFavorites() {
+        window.location.href = 'favorites.html';
+    },
+    
+    // 打开设置页面
+    openSettings() {
+        window.location.href = 'settings.html';
+    },
+    
     async logout() {
         try {
             const res = await this.api('/auth/logout', 'POST');
@@ -648,18 +611,15 @@ const App = {
         }
     },
     
-    // 开始轮询更新
     startPolling() {
         this.pollTimer = setInterval(() => {
             if (this.currentPage === 'conversation') {
                 this.loadConversations();
             }
-            // 检查焚毁消息
             this.api('/message/check_burn');
-        }, 3000); // 每3秒轮询
+        }, 3000);
     },
     
-    // 停止轮询
     stopPolling() {
         if (this.pollTimer) {
             clearInterval(this.pollTimer);
@@ -668,7 +628,6 @@ const App = {
     }
 };
 
-// 初始化
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
 });
