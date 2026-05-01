@@ -847,7 +847,7 @@
             
             async removeFavorite(msgId) {
                 try {
-                    const res = await this.api('/favorite/remove_by_msg', 'POST', { msg_id: msgId });
+                    const res = await this.api('/favorite/remove', 'POST', { msg_id: msgId });
                     if (res.success) {
                         this.toast('已取消收藏');
                         this.updateMessageFavorite(msgId, false);
