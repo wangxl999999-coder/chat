@@ -19,7 +19,7 @@ switch ($action) {
             jsonResponse(false, '参数错误');
         }
         
-        // 检查是否是好友
+        // 检查是否是好友（双向检查）
         $stmt = $pdo->prepare("
             SELECT status FROM friends 
             WHERE user_id = ? AND friend_id = ? AND status = 1
@@ -31,25 +31,25 @@ switch ($action) {
             jsonResponse(false, '请先添加对方为好友');
         }
         
-        // 获取或创建会话
+        // 获取或创建会话（用于后续更新）
         $conversation = getOrCreateConversation($currentUser['id'], $targetId);
         
-        // 构建查询条件
-        $where = "conversation_id = ? AND is_burned = 0";
-        $params = [$conversation['id']];
+        // 构建查询条件 - 使用 sender_id 和 receiver_id，这样可以获取双方的所有消息
+        $where = "((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND is_burned = 0";
+        $params = [$currentUser['id'], $targetId, $targetId, $currentUser['id']];
         
         if ($lastMsgId > 0) {
             $where .= " AND id < ?";
             $params[] = $lastMsgId;
         }
         
-        // 查询消息
+        // 查询消息 - 按时间排序
         $stmt = $pdo->prepare("
             SELECT m.id, m.sender_id, m.receiver_id, m.msg_type, m.content, 
                    m.is_read, m.is_burned, m.burn_time, m.created_at
             FROM messages m
             WHERE {$where}
-            ORDER BY m.id DESC
+            ORDER BY m.id ASC
             LIMIT ?
         ");
         $params[] = $limit;
@@ -57,16 +57,13 @@ switch ($action) {
         
         $messages = $stmt->fetchAll();
         
-        // 倒序排列
-        $messages = array_reverse($messages);
-        
         // 标记对方发送的消息为已读
         $stmt = $pdo->prepare("
             UPDATE messages 
             SET is_read = 1 
-            WHERE conversation_id = ? AND sender_id = ? AND is_read = 0
+            WHERE sender_id = ? AND receiver_id = ? AND is_read = 0
         ");
-        $stmt->execute([$conversation['id'], $targetId]);
+        $stmt->execute([$targetId, $currentUser['id']]);
         
         // 更新会话的未读计数
         $stmt = $pdo->prepare("
