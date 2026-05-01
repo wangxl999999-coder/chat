@@ -23,24 +23,28 @@ switch ($action) {
         $stmt->execute([$currentUser['id']]);
         $friends = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
         
-        // 构建查询条件：自己的所有朋友圈 + 好友的公开朋友圈
-        $userIds = array_merge([$currentUser['id']], $friends);
-        $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+        // 构建查询条件：
+        // 1. 自己的所有朋友圈（包括私有）
+        // 2. 好友的公开朋友圈（is_private = 0）
+        if (empty($friends)) {
+            // 没有好友，只查自己的所有朋友圈
+            $whereCondition = "m.user_id = ?";
+            $params = [$currentUser['id']];
+        } else {
+            $friendPlaceholders = implode(',', array_fill(0, count($friends), '?'));
+            $whereCondition = "m.user_id = ? OR (m.is_private = 0 AND m.user_id IN ($friendPlaceholders))";
+            $params = array_merge([$currentUser['id']], $friends);
+        }
         
         // 查询总数
         $countStmt = $pdo->prepare("
             SELECT COUNT(*) FROM moments m
-            WHERE m.user_id IN ($placeholders)
-            AND (
-                m.user_id = ? 
-                OR (m.is_private = 0 AND m.user_id IN ($placeholders))
-            )
+            WHERE $whereCondition
         ");
-        $countParams = array_merge($userIds, [$currentUser['id']], $friends);
-        $countStmt->execute($countParams);
+        $countStmt->execute($params);
         $total = $countStmt->fetchColumn();
         
-        // 查询数据
+        // 查询数据（添加is_liked参数到查询开头）
         $stmt = $pdo->prepare("
             SELECT m.*, 
                    u.nickname, u.avatar, u.user_number,
@@ -49,22 +53,14 @@ switch ($action) {
                    (SELECT COUNT(*) FROM comments WHERE moment_id = m.id) as comment_count
             FROM moments m
             LEFT JOIN users u ON m.user_id = u.id
-            WHERE m.user_id IN ($placeholders)
-            AND (
-                m.user_id = ? 
-                OR (m.is_private = 0 AND m.user_id IN ($placeholders))
-            )
+            WHERE $whereCondition
             ORDER BY m.created_at DESC
             LIMIT $offset, $pageSize
         ");
         
-        $params = array_merge(
-            [$currentUser['id']],
-            $userIds,
-            [$currentUser['id']],
-            $friends
-        );
-        $stmt->execute($params);
+        // 添加当前用户ID到参数开头（用于is_liked子查询）
+        $queryParams = array_merge([$currentUser['id']], $params);
+        $stmt->execute($queryParams);
         $moments = $stmt->fetchAll();
         
         // 处理图片和获取点赞、评论详情
