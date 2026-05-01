@@ -48,3 +48,5 @@ Stack trace:
 #1 D:\my\tare-git\chat\api\index.php(75): require_once('D:\\my\\tare-git\\...')
 #2 {main}
   thrown in D:\my\tare-git\chat\includes\functions.php on line 269
+[01-May-2026 11:11:51 Asia/Shanghai] 发送验证码到手机 15083299093: 503038
+[01-May-2026 11:13:30 Asia/Shanghai] 发送验证码到手机 15083299093: 109146
