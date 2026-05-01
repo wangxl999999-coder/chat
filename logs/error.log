@@ -50,3 +50,100 @@ Stack trace:
   thrown in D:\my\tare-git\chat\includes\functions.php on line 269
 [01-May-2026 11:11:51 Asia/Shanghai] 发送验证码到手机 15083299093: 503038
 [01-May-2026 11:13:30 Asia/Shanghai] 发送验证码到手机 15083299093: 109146
+[01-May-2026 11:34:37 Asia/Shanghai] 发送验证码到手机 15083299093: 055701
+[01-May-2026 12:14:03 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'chat_app.moments' doesn't exist in D:\my\tare-git\chat\api\moments.php:36
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(36): PDO->prepare('\n            SE...')
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 36
+[01-May-2026 12:14:06 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'chat_app.moments' doesn't exist in D:\my\tare-git\chat\api\moments.php:36
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(36): PDO->prepare('\n            SE...')
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 36
+[01-May-2026 12:15:06 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'chat_app.moments' doesn't exist in D:\my\tare-git\chat\api\moments.php:36
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(36): PDO->prepare('\n            SE...')
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 36
+[01-May-2026 12:16:59 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:17:02 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:17:05 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:17:12 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:17:14 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:18:51 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:19:06 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:19:09 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:19:14 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:19:25 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:20:47 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:20:52 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40
+[01-May-2026 12:21:52 Asia/Shanghai] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number in D:\my\tare-git\chat\api\moments.php:40
+Stack trace:
+#0 D:\my\tare-git\chat\api\moments.php(40): PDOStatement->execute(Array)
+#1 D:\my\tare-git\chat\api\index.php(87): require_once('D:\\my\\tare-git\\...')
+#2 {main}
+  thrown in D:\my\tare-git\chat\api\moments.php on line 40

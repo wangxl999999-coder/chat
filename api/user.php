@@ -150,7 +150,7 @@ switch ($action) {
         break;
         
     case 'search':
-        // 搜索用户（按号码或昵称）
+        // 搜索用户（按号码、手机号或昵称）
         $keyword = trim($_GET['keyword'] ?? '');
         
         if (empty($keyword)) {
@@ -182,6 +182,33 @@ switch ($action) {
             $user['friend_status'] = $friend ? $friend['status'] : -1; // -1: 不是好友
             
             jsonResponse(true, '查询成功', $user);
+        }
+        
+        // 精确匹配手机号（11位数字）
+        if (isValidPhone($keyword)) {
+            $stmt = $pdo->prepare("
+                SELECT id, user_number, nickname, avatar, gender, bio
+                FROM users 
+                WHERE phone = ? AND status = 1
+                LIMIT 1
+            ");
+            $stmt->execute([$keyword]);
+            $user = $stmt->fetch();
+            
+            if ($user) {
+                // 检查是否是好友
+                $stmt = $pdo->prepare("
+                    SELECT status FROM friends 
+                    WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)
+                    LIMIT 1
+                ");
+                $stmt->execute([$currentUser['id'], $user['id'], $user['id'], $currentUser['id']]);
+                $friend = $stmt->fetch();
+                
+                $user['friend_status'] = $friend ? $friend['status'] : -1;
+                
+                jsonResponse(true, '查询成功', $user);
+            }
         }
         
         // 模糊匹配昵称
