@@ -16,3 +16,6 @@
 [01-May-2026 09:43:24 Asia/Shanghai] PHP Fatal error:  require_once(): Failed opening required 'admin.php' (include_path='.;C:\php\pear') in D:\my\tare-git\chat\api\index.php on line 83
 [01-May-2026 09:44:44 Asia/Shanghai] PHP Warning:  require_once(admin.php): failed to open stream: No such file or directory in D:\my\tare-git\chat\api\index.php on line 83
 [01-May-2026 09:44:44 Asia/Shanghai] PHP Fatal error:  require_once(): Failed opening required 'admin.php' (include_path='.;C:\php\pear') in D:\my\tare-git\chat\api\index.php on line 83
+[01-May-2026 09:54:29 Asia/Shanghai] PHP Warning:  require_once(admin.php): failed to open stream: No such file or directory in D:\my\tare-git\chat\api\index.php on line 83
+[01-May-2026 09:54:29 Asia/Shanghai] PHP Fatal error:  require_once(): Failed opening required 'admin.php' (include_path='.;C:\php\pear') in D:\my\tare-git\chat\api\index.php on line 83
+[01-May-2026 10:08:22 Asia/Shanghai] 发送验证码到手机 18511404343: 077573

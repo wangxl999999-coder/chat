@@ -264,3 +264,44 @@ function getOrCreateConversation($userId, $targetId) {
     
     return $conversation;
 }
+
+// ==================== 管理员相关函数 ====================
+
+// 检查管理员是否登录
+function isAdminLoggedIn() {
+    return isset($_SESSION['admin_id']);
+}
+
+// 获取当前登录管理员信息
+function getCurrentAdmin() {
+    if (!isAdminLoggedIn()) {
+        return null;
+    }
+    
+    $pdo = getDB();
+    $stmt = $pdo->prepare("SELECT id, username, role, last_login, created_at FROM admins WHERE id = ?");
+    $stmt->execute([$_SESSION['admin_id']]);
+    
+    return $stmt->fetch();
+}
+
+// 登录管理员
+function loginAdmin($adminId) {
+    $_SESSION['admin_id'] = $adminId;
+    
+    // 更新最后登录时间
+    $pdo = getDB();
+    $stmt = $pdo->prepare("UPDATE admins SET last_login = NOW() WHERE id = ?");
+    $stmt->execute([$adminId]);
+}
+
+// 管理员退出登录
+function logoutAdmin() {
+    unset($_SESSION['admin_id']);
+}
+
+// 检查是否为超级管理员
+function isSuperAdmin() {
+    $admin = getCurrentAdmin();
+    return $admin && $admin['role'] == 2;
+}
