@@ -1,0 +1,31 @@
+Options -Indexes
+
+# 启用重写引擎
+RewriteEngine On
+RewriteBase /chat/
+
+# API路由重写 - 将 /chat/api/module/action 重写到 /chat/api/index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ api/index.php [L]
+
+# 安全设置 - 禁止访问敏感文件
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|md)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# 设置默认字符集
+AddDefaultCharset UTF-8
+
+# PHP设置
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log logs/php_errors.log
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value memory_limit 128M
+    php_value session.gc_maxlifetime 604800
+    php_value session.cookie_lifetime 604800
+</IfModule>
